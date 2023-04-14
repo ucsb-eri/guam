@@ -173,7 +173,12 @@ if (toast) {
 <div id='settingsAFSmanager' class="container" style="display:none">
   <div class="row">
     <div class="col">
-      <h3>Source Options</h3>
+      <h3>Source Options</h3><label for="sourceDropdown">Source:</label>
+<select id="sourceDropdown" onchange="loadSourceOptions()">
+  <option value="">--Select Source--</option>
+  <option value="source1">Source 1</option>
+  <option value="source2">Source 2</option>
+</select>
       <select id="sourceBox" style="width:auto" size="20" multiple>
         <option value="1">Option 1 this is a very wide option</option>
         <option value="2">Option 2</option>
@@ -189,6 +194,12 @@ if (toast) {
     </div>
     <div class="col">
       <h3>Destination Options</h3>
+        <label for="destinationDropdown">Destination:</label>
+<select id="destinationDropdown" onchange="loadDestinationOptions()">
+  <option value="">--Select Destination--</option>
+  <option value="destination1">Destination 1</option>
+  <option value="destination2">Destination 2</option>
+</select>
       <select id="destinationbox" name="destinationbox" size="20" style="width:auto" multiple>
         <option value="5">Option 5 this is a very wide option</option>
         <option value="6">Option 6</option>
@@ -222,6 +233,38 @@ function selectAll() {
     destinationBox.options[i].selected = true;
   }
 }
+</script>
+
+<script>
+  async function loadSourceOptions() {
+    const sourceDropdown = document.getElementById("sourceDropdown");
+    const selectedSource = sourceDropdown.value;
+
+    if (selectedSource) {
+      const response = await fetch(`/source/${selectedSource}`);
+      const options = await response.json();
+      populateSelectBox(sourceBox, options);
+    }
+  }
+
+  async function loadDestinationOptions() {
+    const destinationDropdown = document.getElementById("destinationDropdown");
+    const selectedDestination = destinationDropdown.value;
+
+    if (selectedDestination) {
+      const response = await fetch(`/destination/${selectedDestination}`);
+      const options = await response.json();
+      populateSelectBox(destinationbox, options);
+    }
+  }
+
+  function populateSelectBox(selectBox, options) {
+    selectBox.innerHTML = "";
+    for (const option of options) {
+      const newOption = new Option(option.text, option.value);
+      selectBox.add(newOption);
+    }
+  }
 </script>
 
 </div>
