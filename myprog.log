@@ -1,0 +1,153 @@
+guam24
+['testgroup1']
+<class 'list'>
+ERROR: Failed to add members ['guam24'] to group "testgroup1" - Unable to find "guam24". Operation cancelled.
+
+adding lines to ldif
+dn: CN=/home/guam24,CN=a,OU=a,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: a
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=a,OU=a,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=u,OU=u,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: u
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=u,OU=u,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=t,OU=t,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: t
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=t,OU=t,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=o,OU=o,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: o
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=o,OU=o,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=.,OU=.,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: .
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=.,OU=.,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=T,OU=T,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: T
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=T,OU=T,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=E,OU=E,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: E
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=E,OU=E,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=S,OU=S,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: S
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=S,OU=S,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+adding lines to ldif
+dn: CN=/home/guam24,CN=T,OU=T,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+objectClass: top
+objectClass: nisObject
+cn: /home/guam24
+instanceType: 4
+showInAdvancedViewOnly: TRUE
+name: /home/guam24
+objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
+nisMapName: T
+nisMapEntry: -nolock,rw,soft,vers=4 ohv-08.geog.ucsb.edu:/raida/users-grit/guam24
+distinguishedName: CN=/home/guam24,CN=T,OU=T,OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
+
+added to ldif
+Added 2 records successfully
+
+ohv-08.geog.ucsb.edu:/raida/users-grit/
+/raida/users-grit/guam24

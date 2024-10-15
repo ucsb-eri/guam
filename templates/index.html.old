@@ -4,70 +4,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
     <title>GUAM Grit User and AutoFS Manager</title>
     <link rel="stylesheet" href="/static/bootstrap.min.css">
-        <style>
-        .resizable-textarea {
-            width: 300px;
-            height: 30px;
-            resize: both; /* both | horizontal | vertical | none */
-            overflow: auto;
-        }
-    </style>
 </head>
 <body>
-<form action = / method = "POST">
-    <p style="font-size:20px; color: #000000" class="text-center">Welcome to GUAM (GRIT User and AutoFS Manager)</p>
-    <p style="font-size:15px; color: #000000" class="text-center">
+<form action = /result method = "POST" >
+    <p style="font-size:20px" class="text-center">Welcome to GUAM (GRIT User and AutoFS Manager)</p>
+    <p style="font-size:15px" class="text-center">
         This page will assist you with creating new users and managing AutoFS mounts</p>
 
 {% if result %}
-<script>
-// Get the result value
-const encodedResultValue = "{{ result | replace('\n', ' ') }}";
-const tempElement = document.createElement('div');
-tempElement.innerHTML = encodedResultValue;
-const resultValue = tempElement.textContent;
+  <script>
+    // Get the result value
+    const resultValue = "{{ result }}";
 
-// Show the Bootstrap toast with the result value
-const toast = document.createElement('div');
-toast.classList.add('toast');
-toast.classList.add('show');
-toast.setAttribute('role', 'alert');
-toast.setAttribute('aria-live', 'assertive');
-toast.setAttribute('aria-atomic', 'true');
-toast.innerHTML = `
-  <div class="toast-header mx-auto text-center">
-    <strong class="mr-auto">Result</strong>
-    <button type="button" class="btn btn-link text-primary expand-collapse-btn">Expand</button>
-    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-      <span aria-hidden="true">&times;</span> dismiss
-    </button>
-  </div>
-  <div class="toast-body mx-auto text-center collapse" id="toast-body">
-    ${resultValue}
-  </div>
-`;
-document.body.appendChild(toast);
+    // Show the Bootstrap toast with the result value
+    const toast = document.createElement('div');
+    toast.classList.add('toast');
+    toast.classList.add('show');
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = `
+      <div class="toast-header mx-auto text-center">
+        <strong class="mr-auto">Result</strong>
+        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+          <span aria-hidden="true">&times;</span> dismiss
+        </button>
+      </div>
+      <div class="toast-body mx-auto text-center">
+        ${resultValue}
+      </div>
+    `;
+    document.body.appendChild(toast);
 
-// Hide the Bootstrap toast when the dismiss button is clicked
-toast.querySelector('.close').addEventListener('click', () => {
-  document.body.removeChild(toast);
-});
-
-// Toggle the "Expand" button text when the toast body is shown or hidden
-toast.querySelector('.expand-collapse-btn').addEventListener('click', () => {
-  const expandCollapseBtn = toast.querySelector('.expand-collapse-btn');
-  const toastBody = toast.querySelector('#toast-body');
-  if (toastBody.classList.contains('show')) {
-    expandCollapseBtn.textContent = 'Expand';
-    toastBody.classList.remove('show');
-  } else {
-    expandCollapseBtn.textContent = 'Collapse';
-    toastBody.classList.add('show');
-  }
-});
-</script>
+    // Hide the Bootstrap toast when the dismiss button is clicked
+    toast.querySelector('.close').addEventListener('click', () => {
+      document.body.removeChild(toast);
+    });
+  </script>
 {% endif %}
-  
 
     <SCRIPT>
 	function show(select_item) {
@@ -116,7 +90,6 @@ if (toast) {
 }
 </SCRIPT>
 
-<!--
     <div class="text-center">
     <p style="font-size:20px"> Select your task</p>
 <select name="action" onchange="java_script_:show(this.options[this.selectedIndex].value)">
@@ -128,36 +101,13 @@ if (toast) {
     <option value = "AFSmanager">Manage Autofs Groups</option>
 </select>
 </div>
--->
-
-<div class="container">
-  <div class="text-center mt-4">
-    <h4>Select your task</h4>
-    <select class="form-select mt-2" onchange="show(this.options[this.selectedIndex].value)">
-      <option value="select">Select...</option>
-      <option value="adduser">Add New User</option>
-      <option value="modautofs">Add New Mount to AutoFS</option>
-      <option value="newautofs">Create New AutoFS Group</option>
-      <option value="newsecgroup">Create New Security Group</option>
-      <option value="AFSmanager">Manage Autofs Groups</option>
-    </select>
-  </div>
-</div>
 
 <div id='settingsAddUser' class="text-center" style="display:none">
-	<p>All fields are required</p>
+         <p>All fields are required</p>
          <p>username: <input type = "text" name = "username" value = username /></p>
          <p>first name: <input type = "text" name = "fname" value = fname /></p>
          <p>last name: <input type = "text" name = "lname" value = lname /></p>
          <p>email: <input type = "text" name = "email" value = email /></p>
-    <p>description: <textarea class="resizable-textarea" name="description">description</textarea></p>
-
-    <p>Select user department:</p>
-    <select id="department" name="department">
-         {% for departments in departmentlist %}
-             <option value="{{ departments }}"> "{{ departments }}"</option>
-         {% endfor %}
-    </select>
 
     <p>Select user autofs server / nfs share:</p>
     <select id="userafsserver" name="userafsserver">
@@ -188,8 +138,8 @@ if (toast) {
              <option value="{{ group }}"> "{{ group }}"</option>
          {% endfor %}
 	</select>
-    <p><input type="hidden" name="selected_option" id="selectedOption"></p>
-    <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="AddUser" onclick="setSelectedOption('adduser')"></p>
+
+         <p><input type = "submit" name = "submit_button" class="btn btn-outline-primary" value = "submit User" /></p>
 </div>
 
 <div id='settingsModAutofs' class="text-center" style="display:none">
@@ -201,24 +151,21 @@ if (toast) {
         </select>
          <p>AutoFS path<input type ="text" name = "autofspath" value = "server.fqdn:/share/path" /></p>
          <p>AutoFS local mountpoint<input type ="text" name = "autofsmountpoint" value = "/home/dir" /></p>
-    <p><input type="hidden" name="selected_option" id="selectedOption"></p>
-    <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="AddAutofsEntry" onclick="setSelectedOption('modautofs')"></p>
+         <p><input type = "submit" name = "submit_button" class="btn btn-outline-primary" value = "submit Autofs" /></p>
 </div>
 
 <div id='settingsNewAutofs' class="text-center" style="display:none">
          <p style="font-size:20px"> All fields are required </p>
     <p>enter group names one per line</p>
          <textarea id="w3review" name="w3review" rows="4" cols="50"></textarea>
-    <p><input type="hidden" name="selected_option" id="selectedOption"></p>
-    <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="AddAutofsGroup" onclick="setSelectedOption('newautofs')"></p>
+         <p><input type = "submit" name = "submit_button" class="btn btn-outline-primary" value = "submit AutoFS group" /></p>
 </div>
 
 <div id='settingsNewSecgroup' class="text-center" style="display:none">
          <p>All fields are required</p>
          <p>groupname: <input type = "text" name = "groupname" value = groupname /></p>
          <p>description: <input type = "text" name = "groupdesc" value = groupdesc /></p>
-    <p><input type="hidden" name="selected_option" id="selectedOption"></p>
-    <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="AddSecGroup" onclick="setSelectedOption('newsecgroup')"></p>
+    <p><input type = "submit" name = "submit_button" class="btn btn-outline-primary" value = "submit security group" /></p>
 </div>
 
 
@@ -243,7 +190,7 @@ if (toast) {
       <br><br>
       <button id="copyBtn" type="button" class="btn btn-outline-primary">Copy</button>
               <br><br>
-      <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="ManageAFS" onclick="selectAll(); setSelectedOption('AFSmanager')"></p>
+      <p><input type="submit" name="submit_button" class="btn btn-outline-primary" value="submit" onclick="selectAll()"/></p>
     </div>
     <div class="col">
       <h3>Destination Options</h3>
@@ -264,33 +211,28 @@ if (toast) {
   </div>
 </div>
 
+	<script>
+		const sourceBox = document.getElementById('sourceBox');
+		const destinationbox = document.getElementById('destinationbox');
+		const copyBtn = document.getElementById('copyBtn');
+
+		copyBtn.addEventListener('click', () => {
+			for (const option of sourceBox.options) {
+				if (option.selected) {
+					const newOption = new Option(option.text, option.value);
+					destinationbox.add(newOption);
+				}
+			}
+		});
+	</script>
+
 <script>
-  const sourceBox = document.getElementById("sourceBox");
-  const destinationBox = document.getElementById("destinationbox");
-  const copyBtn = document.getElementById("copyBtn");
-
-  let addedOptions = []; // To store added options
-
-  copyBtn.addEventListener("click", () => {
-    for (const option of sourceBox.options) {
-      if (option.selected) {
-        const newOption = new Option(option.text, option.value);
-        destinationBox.add(newOption);
-        addedOptions.push(newOption.value); // Save added option
-      }
-    }
-  });
-
-  function selectAll() {
-    for (let i = 0; i < destinationBox.options.length; i++) {
-      if (addedOptions.includes(destinationBox.options[i].value)) {
-        // Select only newly added options
-        destinationBox.options[i].selected = true;
-      } else {
-        destinationBox.options[i].selected = false;
-      }
-    }
+function selectAll() {
+  const destinationBox = document.getElementById('destinationbox');
+  for (let i = 0; i < destinationBox.options.length; i++) {
+    destinationBox.options[i].selected = true;
   }
+}
 </script>
 
 <script>
@@ -325,14 +267,7 @@ if (toast) {
   }
 </script>
 
-    <script>
-function setSelectedOption(optionName) {
-  const selectedOptionInput = document.getElementById("selectedOption");
-  selectedOptionInput.value = optionName;
-}
-</script>
 </div>
 </form>
 </body>
 </html>
-

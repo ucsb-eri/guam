@@ -40,8 +40,6 @@ for i in afsserverdict:
     for x in afsserverdict[i]:
         afsserverlist.append(i + ":" + x)
 
-departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
-
 ################################################Regular Calls
 
 #generate the list of security groups
@@ -73,16 +71,15 @@ def dropdown():  # define the data to be sent to the webui containing the list o
     secgrouplist.sort(key=str.casefold)
     return afsusergroups, secgrouplist, afsgroups, secgroupdict # return the dropdown data
 
-######add user
 def addUser(form_data, usersecgroup, afsusergroup):
     afsusergroups, secgrouplist, afsgroups, secgroupdict = dropdown()
     password = secrets.token_urlsafe(pw_length) + "!"
     uidsearchcommand = os.popen('sudo ldbsearch -H /var/lib/samba/private/sam.ldb -b DC=grit,DC=ucsb,DC=edu \'(uidNumber=5****)\' | grep uidNumber')
-    uidsearchresult = uidsearchcommand.read()
+    uidsearchresult = uidsearchcommand.read()  # read output of ldbsearch
     uidresultstrip = re.sub(uidstrip, '', uidsearchresult)
     uidresultsplit = (uidresultstrip.split('\n'))
     maxuid = max(uidresultsplit)
-    newuid = int(maxuid) + 1
+    newuid = int(maxuid)+1
     secondaryGID = usersecgroup
     primaryGID = form_data["userprimarygroup"]
     result = form_data
@@ -90,47 +87,20 @@ def addUser(form_data, usersecgroup, afsusergroup):
     print(newuid)
     open("/tmp/useradd.ldif", 'w').close()
     open("/tmp/userafsadd.ldif", 'w').close()
-    
-    # Adding user with department in LDIF
-    adduser_ldif = f"""
-dn: CN={result['username']},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu
-objectClass: top
-objectClass: person
-objectClass: organizationalPerson
-objectClass: user
-cn: {result['username']}
-sn: {result['lname']}
-givenName: {result['fname']}
-displayName: {result['fname']} {result['lname']}
-name: {result['username']}
-homeDirectory: /home/{result['username']}
-sAMAccountName: {result['username']}
-userPrincipalName: {result['username']}@grit.ucsb.edu
-uidNumber: {newuid}
-gidNumber: {gid}
-unixHomeDirectory: /home/{result['username']}
-loginShell: /bin/bash
-mail: {result['email']}
-department: {result['department']}
-description: {result['description']}
-userAccountControl: 512
-"""
-    with open("/tmp/useradd.ldif", "a") as userfile:
-        userfile.write(adduser_ldif)
-    
-    adduser_command = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/useradd.ldif"
-    sp = subprocess.Popen([adduser_command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    adduser = "sudo samba-tool user create "+result['username']+" "+password+" --surname=\""+result['lname']+"\" --given-name="+result['fname']+" --uid-number "+str(newuid)+" --gid-number "+str(gid)+" --mail-address "+result['email']+" --userou=\"ou=GRIT Users\""+" --use-username-as-cn --unix-home=/home/"+result['username'] #command to run to add a new user to AD
+    addldif = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/useradd.ldif"
+    adduserafsldif = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/userafsadd.ldif"
+    sp = subprocess.Popen([adduser], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) #run command and capture output
     command_result = sp.stdout.read().decode()
-
-    addtoprimarygroup = "sudo samba-tool group addmembers '" + form_data["userprimarygroup"] + "' " + result['username']
-    primarygroupaddcommand = subprocess.Popen([addtoprimarygroup], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    addtoprimarygroup = "sudo samba-tool group addmembers '"+form_data["userprimarygroup"]+"' "+result['username']
+    primarygroupaddcommand = subprocess.Popen([addtoprimarygroup], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) #run command and capture output
     primarygroupadd_result = primarygroupaddcommand.stdout.read().decode()
     print(primarygroupadd_result)
     print(secondaryGID)
     if secondaryGID:
         for j in secondaryGID:
-            addtogroup = "sudo samba-tool group addmembers '" + j + "' " + result['username']
-            groupaddcommand = subprocess.Popen([addtogroup], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            addtogroup = "sudo samba-tool group addmembers '"+j+"' "+result['username']
+            groupaddcommand = subprocess.Popen([addtogroup], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) #run command and capture output 
             groupadd_result = groupaddcommand.stdout.read().decode()
             print(groupadd_result)
     else:
@@ -150,10 +120,12 @@ name: /home/{form_data["username"]}
 objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: {i}
 nisMapEntry: {autofssettings} {form_data["userafsserver"]}{form_data["username"]}
-distinguishedName: CN=/home/{form_data["username"]},CN={i},OU={x.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+distinguishedName: CN=/home/{form_data["username"]},CN={i},OU={x.replace('-home', '')},OU=AutoFS,DC=grit,DC
+ =ucsb,DC=edu
+ 
 """
         print(adduserafs)
-        with open("/tmp/useraddafs.ldif", "a") as userfile:
+        with open("/tmp/useradd.ldif", "a") as userfile:
             userfile.write(adduserafs)
             print("added to ldif")
         userfile.close()
@@ -166,7 +138,7 @@ showInAdvancedViewOnly: TRUE
 name: /home/{form_data["username"]}
 objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: auto.ALL
-nisMapEntry: {autofssettings} {form_data["userafsserver"]}{form_data["username"]}
+nisMapEntry: {autofssettings} {form_data["userafsserver"]}{form_data["username"]} 
 distinguishedName: CN=/home/{result['username']},CN=auto.ALL,OU=ALL,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
 
 dn: CN=/var/www/nextcloud-data/{result['username']},CN=auto.Nextcloud,OU=Nextcloud,OU=AutoFS,DC=grit,DC=ucsb,DC=edu
@@ -178,7 +150,7 @@ showInAdvancedViewOnly: TRUE
 name: /var/www/nextcloud-data/{result['username']}
 objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: auto.Nextcloud
-nisMapEntry: {autofssettings} {form_data["userafsserver"]}{form_data["username"]}
+nisMapEntry: {autofssettings} {form_data["userafsserver"]}{form_data["username"]} 
 distinguishedName: CN=/var/www/nextcloud-data/{result['username']},CN=auto.Nextcloud,OU=Nextcloud,OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
     with open("/tmp/userafsadd.ldif", "a") as afsfile:
         afsfile.write(adduserafsall)
@@ -187,10 +159,8 @@ distinguishedName: CN=/var/www/nextcloud-data/{result['username']},CN=auto.Nextc
         ldif_result = "ERROR"
         return result, display, command_result, ldif_result, gid
     else:
-        ldif_result = "SUCCESS"
-        adduserafsldif = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/userafsadd.ldif"
-        #writeldif = subprocess.Popen([adduser_command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        #ldif_result = writeldif.stdout.read().decode()
+        writeldif = subprocess.Popen([addldif], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        ldif_result = writeldif.stdout.read().decode()
         writeafsldif = subprocess.Popen([adduserafsldif], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         afsldif_result = writeafsldif.stdout.read().decode()
         print(afsldif_result)
@@ -198,25 +168,12 @@ distinguishedName: CN=/var/www/nextcloud-data/{result['username']},CN=auto.Nextc
     zfsserverpath = re.sub('.*:\/', '', form_data["userafsserver"])
     afsserverpath = re.sub('^.*:', '', form_data["userafsserver"])
     autofsserver = re.sub(':.*$', '', form_data["userafsserver"])
-    server = "gritadm@" + autofsserver
-    print(afsserverpath + form_data["username"])
-
-#    sshProcess = subprocess.Popen(['ssh', '-T', server, "sudo zfs create " + zfsserverpath + form_data["username"] + " && sudo zfs set quota=300g refquota=50g " + zfsserverpath + form_data["username"] + " && sudo chown " + str(newuid) + ":" + str(gid) + " " + afsserverpath + form_data["username"] + " && echo "" | sudo tee -a /etc/exports && echo \"" + afsserverpath + form_data["username"] + " \\\\\" | sudo tee -a /etc/exports && echo \"128.111.100.0/23(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.236.0/24(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.104.0/24(rw,no_root_squash)\" | sudo tee -a /etc/exports && sudo systemctl restart nfs-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    
-    nfscommand = f"""
-sudo zfs create {zfsserverpath}{form_data["username"]} && \
-sudo zfs set quota=300g refquota=50g {zfsserverpath}{form_data["username"]} && \
-sudo chown {newuid}:{gid} {afsserverpath}{form_data["username"]} && \
-sudo bash -c 'cat <<EOF >> /etc/exports
-{afsserverpath}{form_data["username"]} \\
-128.111.100.0/23(rw,no_root_squash) \\
-128.111.236.0/24(rw,no_root_squash) \\
-128.111.104.0/24(rw,no_root_squash)
-EOF' && \
-sudo systemctl restart nfs-server
-""" 
-    sshProcess = subprocess.Popen(['ssh', '-T', server, nfscommand], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    server = "gritadm@"+autofsserver
+    print(afsserverpath+form_data["username"])
+    sshProcess = subprocess.Popen(['ssh', '-T', server, "sudo zfs create "+zfsserverpath+form_data["username"]+" && sudo zfs set quota=300g refquota=50g "+zfsserverpath+form_data["username"]+" && sudo chown "+str(newuid)+":"+str(gid)+" "+afsserverpath+form_data["username"]+" && echo "" | sudo tee -a /etc/exports && echo \""+afsserverpath+form_data["username"]+" \\\\\" | sudo tee -a /etc/exports && echo \"128.111.100.0/23(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.236.0/24(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.104.0/24(rw,no_root_squash)\" | sudo tee -a /etc/exports && sudo systemctl restart nfs-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     sshProcess_result = sshProcess.stdout.read().decode()
+    sshProcessCheck = subprocess.Popen(['ssh', '-T', server, "sudo zfs create "+zfsserverpath+form_data["username"]+" && sudo zfs set quota=300g refquota=50g "+zfsserverpath+form_data["username"]+" && sudo chown "+str(newuid)+":"+str(gid)+" "+afsserverpath+form_data["username"]+" && echo "" | sudo tee -a /etc/exports && echo \""+afsserverpath+form_data["username"]+" \\\\\" | sudo tee -a /etc/exports && echo \"128.111.100.0/23(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.236.0/24(rw,no_root_squash) \\\\\" | sudo tee -a /etc/exports && echo \"128.111.104.0/24(rw,no_root_squash)\" | sudo tee -a /etc/exports && sudo systemctl restart nfs-server"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    sshProcessCheck_result = sshProcess.stdout.read().decode()
     result = "form input: " + str(result) + " user add command result: " + command_result + " home folder autofs command result: " + ldif_result + " group add command output: " + groupadd_result + " home folder creation result: " + sshProcess_result
     return result
 
@@ -362,13 +319,13 @@ async def submit_form(request: Request, usersecgroup: list = Form(...), afsuserg
     request={}
     afsusergroups, secgrouplist, afsgroups, secgroupdict = dropdown() 
     print(result)
-    return templates.TemplateResponse('index.html', context={'request': request, 'result': result, 'afsusergroups': afsusergroups, 'afsserverlist': afsserverlist, 'afsgroups': afsgroups, 'secgrouplist': secgrouplist, 'departmentlist': departmentlist})
+    return templates.TemplateResponse('index.html', context={'request': request, 'result': result, 'afsusergroups': afsusergroups, 'afsserverlist': afsserverlist, 'afsgroups': afsgroups, 'secgrouplist': secgrouplist})
 
 @app.get("/")
 def form_post(request: Request):
     result = ""
     afsusergroups, secgrouplist, afsgroups, secgroupdict = dropdown()
-    return templates.TemplateResponse('index.html', context={'request': request, 'result': result, 'afsusergroups': afsusergroups, 'afsserverlist': afsserverlist, 'afsgroups': afsgroups, 'secgrouplist': secgrouplist, 'departmentlist': departmentlist})
+    return templates.TemplateResponse('index.html', context={'request': request, 'result': result, 'afsusergroups': afsusergroups, 'afsserverlist': afsserverlist, 'afsgroups': afsgroups, 'secgrouplist': secgrouplist})
 
 ####################################################Testing
 
