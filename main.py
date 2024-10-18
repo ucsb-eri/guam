@@ -40,7 +40,7 @@ for i in afsserverdict:
     for x in afsserverdict[i]:
         afsserverlist.append(i + ":" + x)
 
-departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
+departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENMT', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
 
 ################################################Regular Calls
 
