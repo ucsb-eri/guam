@@ -7,8 +7,10 @@ import secrets
 import subprocess
 import os
 import re
+import utils
 
 ##########################################Globals
+config = utils.read_config()
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates/")
@@ -26,21 +28,12 @@ autofssettings = "-nolock,rw,soft,vers=4"
 #dict of servers / paths, we do this to make it easier to add and remove servers / paths
 secgroupdict = {}
 afsserverlist = []
-afsserverdict = {
-    "autofs-home.eri.ucsb.edu": ["/raid/users-eri/", "/raid/staff-eri/", "/raid/services-eri/", "/raid/users-nrs/",
-                                 "/raid/users-msi/", "/raid/staff-msi/", "/raid/services-msi/"],
-    "ratl.eri.ucsb.edu": ["/raid/users-eeg/"], "range.eri.ucsb.edu": ["/raid/users-chg/", "/raid/services-chg/"],
-    "twe.eri.ucsb.edu": ["/raid/r.r/ccber/ccber-data/CCBER-Staff/"],
-    "hoodoo.geog.ucsb.edu": ["/raid/users-geog/", "/raid/staff-geog/", "/raid/grad-geog/", "/raid/services-geog/"],
-    "strata.geog.ucsb.edu": ["/raidg/classes-geog/"],
-    "ohv-08.geog.ucsb.edu": ["/raida/users-grit/"],
-    "ohv-29.geog.ucsb.edu": ["/raid/users-grit/"],
-    "quebracho.geog.ucsb.edu": ["/raid/users-emlab/"]}
+afsserverdict = config.get("afsserver", {})
 for i in afsserverdict:
     for x in afsserverdict[i]:
         afsserverlist.append(i + ":" + x)
 
-departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENMT', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
+departmentlist = config.get("departmentlist", [])
 
 ################################################Regular Calls
 
