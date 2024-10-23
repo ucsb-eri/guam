@@ -1,0 +1,18 @@
+departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENMT', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
+
+[server]
+url = "ldap://dc2.grit.ucsb.edu"
+username = "$LDB_USER"
+password = "$LDB_PASSWORD"
+
+[afsserver]
+"autofs-home.eri.ucsb.edu"= ["/raid/users-eri/", "/raid/staff-eri/", "/raid/services-eri/", "/raid/users-nrs/", "/raid/users-msi/", "/raid/staff-msi/", "/raid/services-msi/"]
+"ratl.eri.ucsb.edu" = ["/raid/users-eeg/"]
+"range.eri.ucsb.edu" = ["/raid/users-chg/", "/raid/services-chg/"]
+"twe.eri.ucsb.edu" = ["/raid/r.r/ccber/ccber-data/CCBER-Staff/"]
+"hoodoo.geog.ucsb.edu" = ["/raid/users-geog/", "/raid/staff-geog/", "/raid/grad-geog/", "/raid/services-geog/"]
+"strata.geog.ucsb.edu" = ["/raidg/classes-geog/"]
+"ohv-08.geog.ucsb.edu" = ["/raida/users-grit/"]
+"ohv-29.geog.ucsb.edu" = ["/raid/users-grit/"]
+"quebracho.geog.ucsb.edu" = ["/raid/users-emlab/"]
+

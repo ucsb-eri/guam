@@ -1,4 +1,5 @@
 fastapi
 ninja2
+python-dotenv
 python-multipart
 uvicorn
