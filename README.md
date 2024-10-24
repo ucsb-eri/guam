@@ -11,15 +11,23 @@ Note: It will not replace any environment variable, only ones defined in `.env`
 
 # Development
 
-### Python Dependencies
-
-The dependencies are listed in `requirements.txt`, you can install them by running the following command:
-
-`pip install -r requirements.txt`
-
 ### OS Dependencies
 
 You will need to install the following tools locally
 
 - `samba`
 - `ldb`
+
+### Python Dependencies
+
+The dependencies are listed in `requirements.txt`, you can install them by running the following command:
+
+`pip install -r requirements.txt`
+
+The Samba API is installed with samba, there is no python package. Because of this, you need to ensure that the directory is in the `PYTHONPATH`.
+
+```bash
+export PYTHONPATH=/usr/lib/python3/dist-packages:$PYTHONPATH
+```
+
+

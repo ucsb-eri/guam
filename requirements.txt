@@ -1,4 +1,5 @@
 fastapi
+icecream # Debug printing
 ninja2
 python-dotenv
 python-multipart

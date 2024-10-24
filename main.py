@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from typing import Optional, List
 from pydantic import BaseModel
 import secrets
 import subprocess
@@ -11,6 +10,9 @@ import utils
 
 ##########################################Globals
 config = utils.read_config()
+server_config = config.get("server", {})
+samdb = utils.connect_samdb(server_config.get("url", ""), server_config.get("username", ""), server_config.get("password", ""))
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates/")
@@ -35,33 +37,31 @@ for i in afsserverdict:
 
 departmentlist = config.get("departmentlist", [])
 
-################################################Regular Calls
-
-#generate the list of security groups
-#def Convert(secgroups):
-#    print(secgroups)
-#    res_dct = {secgroups[i]: secgroups[i + 1] for i in range(0, len(secgroups), 2)}
-#    return res_dct
-def Convert(secgroups):
-    res_dct = {secgroups[i]: secgroups[i + 1] for i in range(0, len(secgroups) - 1, 2)}
-    return res_dct
-
-
 #get the list of autofs groups
 def dropdown():  # define the data to be sent to the webui containing the list of existing autofs groups in AD
-    stream = os.popen(
-        'sudo ldbsearch -H /var/lib/samba/private/sam.ldb -b ou=AutoFS,DC=grit,DC=ucsb,DC=edu')
-    output = stream.read()
-    rawafsgroups = group.findall(output)
-    dedupafsgroups = list(dict.fromkeys(rawafsgroups))
-    dedupafsgroups.remove("auto.master")
-    afsgroups = dedupafsgroups
-    afsusergroups = dedupafsgroups
-    secgroupcommand = os.popen(
-        'sudo ldbsearch -H /var/lib/samba/private/sam.ldb -b "OU=GRIT Users,DC=grit,DC=ucsb,DC=edu" \'(sAMAccountType=268435456)\'')
-    rawsecgroups = secgroupcommand.read()
-    secgroups = secgroupregex.findall(rawsecgroups)
-    secgroupdict = Convert(secgroups)
+    result = samdb.search('ou=AutoFS,DC=grit,DC=ucsb,DC=edu')
+    afsgroups = []
+    for item in result:
+        if 'nisMapName' in item:
+            afsgroup = str(item['nisMapName'])
+
+            if afsgroup != 'auto.master' and afsgroup not in afsgroups:
+                afsgroups.append(afsgroup)
+
+    afsusergroups = afsgroups
+
+    query = "(sAMAccountType=268435456)"
+    result = samdb.search('OU=GRIT Users,DC=grit,DC=ucsb,DC=edu', expression=query)
+
+    secgroupdict = {}
+
+    for item in result:
+        match = re.search('CN=(.*?),', str(item.get('dn', '')))
+        group_name = match[1]
+        gid = str(item.get('gidNumber', None))
+
+        secgroupdict[group_name] = gid
+
     secgrouplist = list(secgroupdict.keys())
     secgrouplist.sort(key=str.casefold)
     return afsusergroups, secgrouplist, afsgroups, secgroupdict # return the dropdown data
@@ -392,10 +392,10 @@ destination_data = {
     ],
 }
 
-@app.get("/source/{source_id}", response_model=List[Option])
+@app.get("/source/{source_id}", response_model=list[Option])
 async def get_source_options(source_id: str):
     return source_data.get(source_id, [])
 
-@app.get("/destination/{destination_id}", response_model=List[Option])
+@app.get("/destination/{destination_id}", response_model=list[Option])
 async def get_destination_options(destination_id: str):
     return destination_data.get(destination_id, [])
