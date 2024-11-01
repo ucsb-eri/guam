@@ -3,29 +3,30 @@
     <head>{% include 'shared/head.html.j2' %}</head>
     <body>
         {% include 'shared/nav.html.j2' %}
-        <form action="/add_user" method="POST">
+        <form action="/users" method="POST">
             <div id="settingsAddUser" class="text-center">
                 <p>All fields are required</p>
                 <p>
                     username:
-                    <input type="text" name="username" value="username" />
+                    <input type="text" name="username" placeholder="Username" />
                 </p>
                 <p>
                     first name:
-                    <input type="text" name="fname" value="fname" />
+                    <input type="text" name="fname" placeholder="First Name" />
                 </p>
                 <p>
                     last name:
-                    <input type="text" name="lname" value="lname" />
+                    <input type="text" name="lname" placeholder="Last Name" />
                 </p>
                 <p>
                     email:
-                    <input type="text" name="email" value="email" />
+                    <input type="text" name="email" placeholder="Email" />
                 </p>
                 <p>
                     description:
-                    <textarea class="resizable-textarea" name="description">
-description</textarea>
+                    <textarea class="resizable-textarea"
+                              name="description"
+                              placeholder="Description"></textarea>
                 </p>
                 <p>Select user department:</p>
                 <select id="department" name="department">
@@ -49,14 +50,10 @@ description</textarea>
                     {% for group in secgrouplist %}<option value="{{ group }}">"{{ group }}"</option>{% endfor %}
                 </select>
                 <p>
-                    <input type="hidden" name="selected_option" id="selectedOption" />
-                </p>
-                <p>
                     <input type="submit"
                            name="submit_button"
                            class="btn btn-outline-primary"
-                           value="AddUser"
-                           onclick="setSelectedOption('adduser')" />
+                           value="Add User" />
                 </p>
             </div>
         </form>

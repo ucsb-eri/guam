@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% include 'shared/head.html.j2' %}
+    <body>
+        <form action="/autofs_groups" method="POST">
+            {% include 'shared/nav.html.j2' %}
+            <div id='settingsNewAutofs' class="text-center">
+                <p style="font-size:20px">All fields are required</p>
+                <p>enter group names one per line</p>
+                <textarea id="w3review" name="groups" rows="4" cols="50"></textarea>
+                <p>
+                    <input type="submit"
+                           name="submit_button"
+                           class="btn btn-outline-primary"
+                           value="AddAutofsGroup"
+                           onclick="setSelectedOption('newautofs')">
+                </p>
+            </div>
+        </form>
+    </body>
+</html>

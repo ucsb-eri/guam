@@ -27,3 +27,13 @@ def read_config():
     config = tomllib.loads(config_str)
 
     return config
+
+config = read_config()
+
+departmentlist = config.get("departmentlist", [])
+
+afsserverlist = []
+afsserverdict = config.get("afsserver", {})
+for i in afsserverdict:
+    for x in afsserverdict[i]:
+        afsserverlist.append(i + ":" + x)
