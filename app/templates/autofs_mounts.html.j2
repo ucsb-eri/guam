@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% include 'shared/head.html.j2' %}
+    <body>
+        {% include 'shared/nav.html.j2' %}
+        <form action="/autofs_mount" method="POST">
+            <div id='settingsModAutofs' class="text-center">
+                <p style="font-size:20px">All fields are required</p>
+                <select multiple id="afsgroup" name="afsgroup">
+                    {% for item in afsgroups %}<option value="{{ item }}">"{{ item }}"</option>{% endfor %}
+                </select>
+                <p>
+                    AutoFS path
+                    <input type="text"
+                           name="autofspath"
+                           placeholder="server.fqdn:/share/path" />
+                </p>
+                <p>
+                    AutoFS local mountpoint
+                    <input type ="text" name = "autofsmountpoint" placeholder = "/home/dir" />
+                </p>
+                <p>
+                    <input type="submit"
+                           name="submit_button"
+                           class="btn btn-outline-primary"
+                           value="AddAutofsEntry"
+                           onclick="setSelectedOption('modautofs')">
+                </p>
+            </div>
+        </form>
+    </body>
+</html>
