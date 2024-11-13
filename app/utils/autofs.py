@@ -1,12 +1,13 @@
 import os
 import re
-
-from app.models.autofs import AutoFSMount, AutoFSGroup
-
 import subprocess
 
+from samba.samdb import SamDB
 
-def addAutofsEntry(mount: AutoFSMount):
+from app.models.autofs import AutoFSGroup, AutoFSMount
+
+
+def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
     result = form_data
     open("/tmp/afsgroupadd.ldif", "w").close()
     addafsldif = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/afsgroupadd.ldif"
@@ -37,14 +38,15 @@ distinguishedName: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '
 
 
 def addAutofsGroup(groups: AutoFSGroup):
-    print(groups)
     " ".join(str(e) for e in groups)
     grouplist = str(groups).split(r"\r\n")
     grouplist = [s.replace("[", "") for s in grouplist]
     grouplist = [s.replace("]", "") for s in grouplist]
     grouplist = [s.replace("'", "") for s in grouplist]
     open("/tmp/afsgroupnew.ldif", "w").close()
-    addafsnewldif = "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/afsgroupnew.ldif"
+    addafsnewldif = (
+        "sudo ldbadd -H /var/lib/samba/private/sam.ldb /tmp/afsgroupnew.ldif"
+    )
     for each in grouplist:
         afsnewgroup = f"""dn: OU={each},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
 objectClass: top
@@ -103,18 +105,14 @@ distinguishedName: CN=auto.{each},OU={each},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
     return groups
 
 
-def afsusergroups():  # define the data to be sent to the webui containing the list of existing autofs groups in AD
-    # regex to filter out autofs map names from ldbsearch, ie auto.chc or auto.grit
-    group = re.compile(r"(?<=^nisMapName: ).*$", re.MULTILINE)
+def afsgroups(samdb: SamDB, filter: str):
+    result = samdb.search("ou=AutoFS,DC=grit,DC=ucsb,DC=edu", expression=f"(nisMapName={filter}*)")
+    afsgroups = []
+    for item in result:
+        if "nisMapName" in item:
+            afsgroup = str(item["nisMapName"])
 
-    stream = os.popen(
-        "sudo ldbsearch -H  /var/lib/samba/private/sam.ldb -b ou=AutoFS,DC=grit,DC=ucsb,DC=edu"
-    )
-    output = stream.read()
-    rawafsgroups = group.findall(output)
-    dedupafsgroups = list(dict.fromkeys(rawafsgroups))
-    dedupafsgroups.remove("auto.master")
-    afsgroups = dedupafsgroups
-    afsusergroups = dedupafsgroups
+            if afsgroup != "auto.master" and afsgroup not in afsgroups:
+                afsgroups.append(afsgroup)
 
-    return afsusergroups
+    return afsgroups

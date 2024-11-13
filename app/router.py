@@ -1,114 +1,215 @@
-from fastapi import APIRouter, Request, Form
-from fastapi.templating import Jinja2Templates
-from app import config
-from app.utils import users, groups, autofs
 from typing import Annotated
-from fastapi.responses import RedirectResponse
 
-from app.models.user import User
-from app.models.autofs import AutoFSMount, AutoFSGroup
+import starlette.status as status
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastui import AnyComponent, FastUI, prebuilt_html
+from fastui import components as c
+from fastui.events import GoToEvent
+from fastui.forms import SelectSearchResponse, fastui_form
+from ldb import LdbError
+from samba.samdb import SamDB
+
+from app import config, smb
+from app.models.autofs import AutoFSGroup, AutoFSMount
 from app.models.secgroup import SecurityGroup
-
-templates = Jinja2Templates(directory="app/templates/")
+from app.models.user import User
+from app.utils import autofs, groups, users
 
 router = APIRouter()
 
 
+def get_smb():
+    samdb = smb.connect()
+    try:
+        yield samdb
+    finally:
+        samdb.disconnect()
+
+
+def layout(*components: AnyComponent, title: str) -> list[AnyComponent]:
+    return [
+        c.PageTitle(text=title),
+        c.Navbar(
+            title="GUAM",
+            title_event=GoToEvent(url="/users"),
+            start_links=[
+                c.Link(
+                    components=[c.Text(text="User")],
+                    on_click=GoToEvent(url="/users"),
+                    active="startswith:/users",
+                ),
+                c.Link(
+                    components=[c.Text(text="AFS Mount")],
+                    on_click=GoToEvent(url="/afsmounts"),
+                    active="startswith:/afsmounts",
+                ),
+                c.Link(
+                    components=[c.Text(text="AFS Group")],
+                    on_click=GoToEvent(url="/afsgroups"),
+                    active="startswith:/afsgroups",
+                ),
+                c.Link(
+                    components=[c.Text(text="Security Group")],
+                    on_click=GoToEvent(url="/secgroups"),
+                    active="startswith:/secgroups",
+                ),
+            ],
+        ),
+        c.Page(components=components),
+    ]
+
+
+@router.get("/api/forms/servers", response_model=SelectSearchResponse)
+async def search_view(
+    request: Request,
+    q: str,
+) -> SelectSearchResponse:
+    servers: list[str] = config.afsserverlist
+    servers = [server for server in servers if server.startswith(q)]
+    options = []
+
+    for server in servers:
+        options.append({"value": server, "label": server})
+
+    return SelectSearchResponse(options=options)
+
+
+@router.get("/api/forms/departments", response_model=SelectSearchResponse)
+async def search_view(
+    request: Request,
+    q: str,
+) -> SelectSearchResponse:
+    departments: list[str] = config.departmentlist
+    departments = [department for department in departments if department.startswith(q)]
+    options = []
+
+    for department in departments:
+        options.append({"value": department, "label": department})
+
+    return SelectSearchResponse(options=options)
+
+
+@router.get("/api/forms/afsgroups", response_model=SelectSearchResponse)
+async def search_view(
+    request: Request,
+    q: str,
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> SelectSearchResponse:
+    afsgroups = autofs.afsgroups(samdb, q)
+
+    options = []
+    for afsgroup in afsgroups:
+        options.append({"value": afsgroup, "label": afsgroup})
+
+    print(options)
+    return SelectSearchResponse(options=options)
+
+
+@router.get("/api/forms/secgroups", response_model=SelectSearchResponse)
+async def search_view(
+    request: Request,
+    q: str,
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> SelectSearchResponse:
+    secgroups = list(groups.secgroups(samdb, q).keys())
+    secgroups.sort(key=str.casefold)
+
+    options = []
+    for secgroup in secgroups:
+        options.append({"value": secgroup, "label": secgroup})
+
+    return SelectSearchResponse(options=options)
+
+
+@router.get("/api/users", response_model=FastUI, response_model_exclude_none=True)
+def user_get():
+    return layout(
+        c.ModelForm(model=User, submit_url="/api/users"), title="Add New User"
+    )
+    # return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
+
+
+@router.post("/api/users", response_model=FastUI)
+def user_post(
+    form: Annotated[User, fastui_form(User)],
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> list[AnyComponent]:
+    try:
+        user = users.add_user(samdb, form)
+    except LdbError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    return [form]
+
+
+@router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
+async def get_afsmounts():
+    return layout(
+        c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts"),
+        title="Add New Mount to AutoFS",
+    )
+
+
+@router.post("/api/afsmounts", response_model=FastUI)
+async def post_afsmounts(
+    form: Annotated[AutoFSMount, fastui_form(AutoFSMount)],
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> list[AnyComponent]:
+    try:
+        mount = autofs.addAutofsEntry(samdb, form)
+    except LdbError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    return [form]
+
+
+@router.get("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
+async def get_afsgroups():
+    return layout(
+        c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups"),
+        title="Add New AutoFS Group",
+    )
+
+
+@router.post("/api/afsgroups")
+async def post_afsgroups(
+    form: Annotated[AutoFSGroup, fastui_form(AutoFSGroup)],
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> list[AnyComponent]:
+    try:
+        groups = autofs.addAutofsGroup(data)
+    except LdbError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+    return [form]
+
+
+@router.get("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
+async def get_secgroups():
+    return layout(
+        c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups"),
+        title="Create New Security Group",
+    )
+
+
+@router.post("/api/secgroups", response_model=FastUI)
+async def post_secgroups(
+    form: Annotated[SecurityGroup, fastui_form(SecurityGroup)],
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> list[AnyComponent]:
+    try:
+        group = groups.add_sec_group(data)
+    except LdbError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    return [form]
+
+
 @router.get("/")
-async def get_index(request: Request):
-    return templates.TemplateResponse("index.html.j2", {"request": request})
+async def index():
+    # Redirect to /docs (relative URL)
+    return RedirectResponse(url="/users", status_code=status.HTTP_302_FOUND)
 
-
-# @router.get("/result")
-# async def get_result(request: Request):
-#     print(request.)
-#     return templates.TemplateResponse("result.html.j2", {"request": request})
-
-
-@router.get("/users")
-async def get_user(request: Request):
-    # print("request")
-    # print(await request.json())
-    departmentlist: list[str] = config.departmentlist
-    afsserverlist: list[str] = config.afsserverlist
-    afsusergroups: list[str] = autofs.afsusergroups()
-    secgrouplist: list[str] = list(groups.secgroups().keys())
-    secgrouplist.sort(key=str.casefold)
-
-    return templates.TemplateResponse(
-        "users.html.j2",
-        {
-            "request": request,
-            "departmentlist": departmentlist,
-            "afsserverlist": afsserverlist,
-            "afsusergroups": afsusergroups,
-            "secgrouplist": secgrouplist,
-        },
-    )
-
-
-@router.post("/users")
-async def post_user(data: Annotated[User, Form()], request: Request):
-    user = users.addUser(data)
-
-    # Error should be handled here!
-    return templates.TemplateResponse(
-        "result.html.j2", {"request": request, "type": "User", "data": user}
-    )
-
-@router.get("/autofs_mounts")
-async def get_autofs_mount(request: Request):
-    afsgroups: list[str] = autofs.afsusergroups()
-
-    return templates.TemplateResponse(
-        "autofs_mounts.html.j2", {"request": request, "afsgroups": afsgroups}
-    )
-
-
-@router.post("/autofs_mounts")
-async def post_autofs_mount(data: Annotated[AutoFSMount, Form()], request: Request):
-    mount = autofs.addAutofsEntry(data)
-
-    return templates.TemplateResponse(
-        "result.html.j2", {"request": request, "type": "AutoFS Mount", "data": mount}
-    )
-
-@router.get("/autofs_groups")
-async def get_autofs_groups(request: Request):
-    return templates.TemplateResponse("autofs_groups.html.j2", {"request": request})
-
-
-@router.post("/autofs_groups")
-async def post_autofs_groups(data: Annotated[AutoFSGroup, Form()], request: Request):
-    groups = autofs.addAutofsGroup(data)
-
-    return templates.TemplateResponse(
-        "result.html.j2", {"request": request, "type": "AutoFS Group", "data": groups}
-    )
-
-@router.get("/secgroups")
-async def get_sec_group(request: Request):
-    return templates.TemplateResponse("secgroups.html.j2", {"request": request})
-
-
-@router.post("/secgroups")
-async def post_sec_group(data: Annotated[SecurityGroup, Form()], request: Request):
-    group = groups.add_sec_group(data)
-    # result = addUser(form_data, usersecgroup, afsusergroup)
-
-    return templates.TemplateResponse(
-        "result.html.j2", {"request": request, "type": "Security Group", "data": group}
-    )
-
-@router.get("/manage_autofs_groups")
-async def get_manage_autofs_groups(request: Request):
-    return templates.TemplateResponse(
-        "manage_autofs_groups.html.j2", {"request": request}
-    )
-
-
-@router.post("/manage_autofs_groups")
-async def post_manage_autofs_groups(request: Request):
-    # result = addUser(form_data, usersecgroup, afsusergroup)
-
-    return templates.TemplateResponse("result.html.j2")
+# IMPORTANT: This route should be the last route in this file!!!!!!!
+@router.get("/{path:path}")
+def root() -> HTMLResponse:
+    """Simple HTML page which serves the React app, comes last as it matches all paths."""
+    return HTMLResponse(prebuilt_html(title="Guam"))

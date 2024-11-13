@@ -1,13 +1,36 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
+
 
 class User(BaseModel):
-    username: str
-    fname: str
-    lname: str
-    email: str
-    description: str
-    department: str
-    userafsserver: str
-    afsusergroup: list[str]
-    userprimarygroup: str
-    usersecgroup: list[str]
+    username: str = Field(title="Username")
+    fname: str = Field(title="First Name")
+    lname: str = Field(title="Last Name")
+    email: str = Field(title="Email")
+    description: str = Field(title="Description")
+    department: str = Field(
+        title="User Department",
+        json_schema_extra={"search_url": "/api/forms/departments"},
+    )
+    userafsserver: str = Field(
+        title="User AutoFS Server",
+        json_schema_extra={"search_url": "/api/forms/servers"},
+    )
+    afsusergroup: list[str] = Field(
+        title="AutoFS Groups", json_schema_extra={"search_url": "/api/forms/afsgroups"}
+    )
+    userprimarygroup: str = Field(
+        title="Primary AD Group",
+        json_schema_extra={"search_url": "/api/forms/secgroups"},
+    )
+    usersecgroup: list[str] = Field(
+        title="Additional AD Groups",
+        json_schema_extra={"search_url": "/api/forms/secgroups"},
+    )
+
+    @field_validator("afsusergroup", "usersecgroup", mode="before")
+    @classmethod
+    def correct_select_multiple(cls, v: list[str]) -> list[str]:
+        if isinstance(v, list):
+            return v
+        else:
+            return [v]

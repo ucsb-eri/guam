@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SecurityGroup(BaseModel):
-    groupname: str
-    groupdesc: str
+    groupname: str = Field(title="Username")
+    groupdesc: str = Field(title="Description")

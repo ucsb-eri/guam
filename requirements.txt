@@ -1,4 +1,5 @@
 fastapi
+fastui
 ninja2
 python-dotenv
 python-multipart
