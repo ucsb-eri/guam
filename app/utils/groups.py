@@ -1,12 +1,11 @@
 import os
 import re
+
+from samba.samdb import SamDB
+
 from app.models.secgroup import SecurityGroup
 
-secgroupregex = re.compile(r"(?<=^dn: CN=)[^,]+|(?<=^gidNumber: ).*$", re.MULTILINE)  # extract just the CN from the DN
-
-def Convert(secgroups):
-    res_dct = {secgroups[i]: secgroups[i + 1] for i in range(0, len(secgroups) - 1, 2)}
-    return res_dct
+# def max_gid():
 
 
 def add_sec_group(group: SecurityGroup):
@@ -37,10 +36,16 @@ distinguishedName: CN={group.groupname},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu"""
     # result = "form input: " + str(result) + " ldif command output: " + ldif_secgroup_result + " newgid: " + str(newgid)
     return group
 
-def secgroups():
-    secgroupcommand = os.popen(
-        'sudo ldbsearch -H /var/lib/samba/private/sam.ldb -b "OU=GRIT Users,DC=grit,DC=ucsb,DC=edu" \'(sAMAccountType=268435456)\'')
-    rawsecgroups = secgroupcommand.read()
-    secgroups = secgroupregex.findall(rawsecgroups)
-    secgroupdict = Convert(secgroups)
+def secgroups(samdb: SamDB, filter=""):
+    search_result = samdb.search('OU=GRIT Users,DC=grit,DC=ucsb,DC=edu', expression="(sAMAccountType=268435456)")
+
+    secgroupdict = {}
+
+    for item in search_result:
+        match = re.search('CN=(.*?),', str(item.get('dn', '')))
+        group_name = match[1]
+        gid = str(item.get('gidNumber', None))
+
+        secgroupdict[group_name] = gid
+
     return secgroupdict
