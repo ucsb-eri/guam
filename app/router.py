@@ -1,3 +1,5 @@
+import logging
+import traceback
 from typing import Annotated
 
 import starlette.status as status
@@ -5,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastui import AnyComponent, FastUI, prebuilt_html
 from fastui import components as c
-from fastui.events import GoToEvent
 from fastui.forms import SelectSearchResponse, fastui_form
 from ldb import LdbError
 from samba.samdb import SamDB
@@ -16,7 +17,9 @@ from app.models.secgroup import SecurityGroup
 from app.models.user import User
 from app.utils import autofs, groups, users
 
+from app.components import layout
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
 
 
 def get_smb():
@@ -25,39 +28,6 @@ def get_smb():
         yield samdb
     finally:
         samdb.disconnect()
-
-
-def layout(*components: AnyComponent, title: str) -> list[AnyComponent]:
-    return [
-        c.PageTitle(text=title),
-        c.Navbar(
-            title="GUAM",
-            title_event=GoToEvent(url="/users"),
-            start_links=[
-                c.Link(
-                    components=[c.Text(text="User")],
-                    on_click=GoToEvent(url="/users"),
-                    active="startswith:/users",
-                ),
-                c.Link(
-                    components=[c.Text(text="AFS Mount")],
-                    on_click=GoToEvent(url="/afsmounts"),
-                    active="startswith:/afsmounts",
-                ),
-                c.Link(
-                    components=[c.Text(text="AFS Group")],
-                    on_click=GoToEvent(url="/afsgroups"),
-                    active="startswith:/afsgroups",
-                ),
-                c.Link(
-                    components=[c.Text(text="Security Group")],
-                    on_click=GoToEvent(url="/secgroups"),
-                    active="startswith:/secgroups",
-                ),
-            ],
-        ),
-        c.Page(components=components),
-    ]
 
 
 @router.get("/api/forms/servers", response_model=SelectSearchResponse)
@@ -81,7 +51,8 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [department for department in departments if department.startswith(q)]
+    departments = [
+        department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
@@ -130,16 +101,17 @@ def user_get():
     # return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
 
 
-@router.post("/api/users", response_model=FastUI)
+@router.post("/api/users", response_model=FastUI, response_model_exclude_none=True)
 def user_post(
     form: Annotated[User, fastui_form(User)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
         user = users.add_user(samdb, form)
-    except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    return [form]
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+    return user_created()
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
@@ -158,7 +130,7 @@ async def post_afsmounts(
     try:
         mount = autofs.addAutofsEntry(samdb, form)
     except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     return [form]
 
 
@@ -178,7 +150,7 @@ async def post_afsgroups(
     try:
         groups = autofs.addAutofsGroup(data)
     except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
     return [form]
 
@@ -199,7 +171,7 @@ async def post_secgroups(
     try:
         group = groups.add_sec_group(data)
     except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     return [form]
 
 
@@ -207,6 +179,7 @@ async def post_secgroups(
 async def index():
     # Redirect to /docs (relative URL)
     return RedirectResponse(url="/users", status_code=status.HTTP_302_FOUND)
+
 
 # IMPORTANT: This route should be the last route in this file!!!!!!!
 @router.get("/{path:path}")
