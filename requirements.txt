@@ -1,7 +1,7 @@
 fastapi
 fastui
-ninja2
 paramiko
 python-dotenv
 python-multipart
+tomli
 uvicorn

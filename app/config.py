@@ -7,6 +7,12 @@ from samba.auth import system_session
 from samba.credentials import Credentials
 from samba.param import LoadParm
 from samba.samdb import SamDB
+import sys
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 
 def read_config():
@@ -32,6 +38,7 @@ def read_config():
     config = tomllib.loads(config_str)
 
     return config
+
 
 config = read_config()
 
