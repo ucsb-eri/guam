@@ -36,27 +36,14 @@ def layout(*components: AnyComponent, title: str) -> list[AnyComponent]:
     ]
 
 
-def user_created():
+def user_created(user):
     return layout(
-        [
-            c.Page(  # Page provides a basic container for components
-                components=[
-                    # renders `<h2>Users</h2>`
-                    c.Heading(text="Users", level=2),
-                    c.Table(
-                        data=users,
-                        # define two columns for the table
-                        columns=[
-                            # the first is the users, name rendered as a link to their profile
-                            DisplayLookup(
-                                field="name", on_click=GoToEvent(url="/user/{id}/")
-                            ),
-                            # the second is the date of birth, rendered as a date
-                            DisplayLookup(field="dob", mode=DisplayMode.date),
-                        ],
-                    ),
-                ]
-            ),
+        components=[
+            c.Markdown(f"""
+                   <table>
+                   <tr><td>Username</td><td>{user.username}</td></tr>
+                   </table>
+            """)
         ],
         title="User Added",
     )

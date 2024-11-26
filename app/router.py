@@ -18,6 +18,7 @@ from app.models.user import User
 from app.utils import autofs, groups, users
 
 from app.components import layout
+
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
 
@@ -51,8 +52,7 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [
-        department for department in departments if department.startswith(q)]
+    departments = [department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
@@ -95,10 +95,10 @@ async def search_view(
 
 @router.get("/api/users", response_model=FastUI, response_model_exclude_none=True)
 def user_get():
-    return layout(
-        c.ModelForm(model=User, submit_url="/api/users"), title="Add New User"
-    )
-    # return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
+    # c.ModelForm.model_rebuild()
+    form = c.ModelForm(model=User, submit_url="/api/users")
+    # return layout(form, title="Add New User")
+    return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
 
 
 @router.post("/api/users", response_model=FastUI, response_model_exclude_none=True)
@@ -111,7 +111,7 @@ def user_post(
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
-    return user_created()
+    return user_created(user)
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
