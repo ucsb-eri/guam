@@ -22,6 +22,8 @@ from app.components import layout
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
 
+# Needed to prevent this problem: https://errors.pydantic.dev/2.10/u/class-not-fully-defined
+c.ModelForm.model_rebuild()
 
 def get_smb():
     samdb = smb.connect()

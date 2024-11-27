@@ -38,26 +38,26 @@ def add_autofs_mount(user, uid, gid):
     autofsserver = re.sub(":.*$", "", user.userafsserver)
 
     nfscommand = f"""
- sudo zfs create {zfsserverpath}{user.username} && \
- sudo zfs set quota=300g refquota=50g {zfsserverpath}{user.username} && \
- sudo chown {uid}:{gid} {afsserverpath}{user.username} && \
- sudo bash -c 'cat <<EOF >> /etc/exports
- {afsserverpath}{user.username} \\
- 128.111.100.0/23(rw,no_root_squash) \\
- 128.111.236.0/24(rw,no_root_squash) \\
- 128.111.104.0/24(rw,no_root_squash)
- EOF' && \
- sudo systemctl restart nfs-server
- """
+sudo zfs create {zfsserverpath}{user.username} && \
+sudo zfs set quota=300g refquota=50g {zfsserverpath}{user.username} && \
+sudo chown {uid}:{gid} {afsserverpath}{user.username} && \
+sudo bash -c 'cat <<EOF >> /etc/exports
+{afsserverpath}{user.username} \
+128.111.100.0/23(rw,no_root_squash) \
+128.111.236.0/24(rw,no_root_squash) \
+128.111.104.0/24(rw,no_root_squash)
+EOF' && \
+sudo systemctl restart nfs-server
+"""
     client = SSHClient()
     client.load_system_host_keys()
     client.connect(autofsserver, username="gritadm")
     stdin, stdout, stderr = client.exec_command(nfscommand)
 
-    print(stdout.read().decode('ascii'))
-    print(stderr.read().decode('ascii'))
+    print(stdout.read().decode("ascii"))
+    print(stderr.read().decode("ascii"))
     if stderr:
-        raise NFSError(stderr.read().decode('ascii'))
+        raise NFSError(stderr.read().decode("ascii"))
 
 
 def afs_ldif(afs_mount, afs_group, afs_server, username, ou):
@@ -119,19 +119,32 @@ def add_user(samdb: SamDB, user: User):
             print(i)
             x = i.replace("auto.", "")
             print(x)
-            print('--------')
+            print("--------")
 
             add_userafs = afs_ldif(
-                f"/home/{user.username}", i, user.userafsserver, user.username, x.replace("-home", "")
+                f"/home/{user.username}",
+                i,
+                user.userafsserver,
+                user.username,
+                x.replace("-home", ""),
             )
             samdb.add_ldif(add_userafs)
 
         add_userafs_all = afs_ldif(
-            f"/home/{user.username}", "auto.ALL", user.userafsserver, user.username, "ALL")
+            f"/home/{user.username}",
+            "auto.ALL",
+            user.userafsserver,
+            user.username,
+            "ALL",
+        )
         samdb.add_ldif(add_userafs_all)
 
         add_userafs_nextcloud = afs_ldif(
-            f"/var/www/nextcloud-data/{user.username}", "auto.Nextcloud", user.userafsserver, user.username, "Nextcloud"
+            f"/var/www/nextcloud-data/{user.username}",
+            "auto.Nextcloud",
+            user.userafsserver,
+            user.username,
+            "Nextcloud",
         )
         samdb.add_ldif(add_userafs_nextcloud)
 
