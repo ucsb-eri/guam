@@ -1,14 +1,16 @@
+import logging
 import os
 import re
 import secrets
 import subprocess
 
+from paramiko.client import SSHClient
 from samba.samdb import SamDB
 
 from app.models.user import User
 from app.utils import groups
-from paramiko.client import SSHClient
 
+logger = logging.getLogger("uvicorn.error")
 pw_length = 10
 uidstrip = re.compile(r"^uidNumber: ", re.MULTILINE)
 
@@ -54,9 +56,10 @@ sudo systemctl restart nfs-server
     client.connect(autofsserver, username="gritadm")
     stdin, stdout, stderr = client.exec_command(nfscommand)
 
-    print(stdout.read().decode("ascii"))
-    print(stderr.read().decode("ascii"))
-    if stderr:
+    stdout_str = stdout.read().decode("ascii")
+    stderr_str = stderr.read().decode("ascii")
+    
+    if len(stderr_str) > 0:
         raise NFSError(stderr.read().decode("ascii"))
 
 
@@ -86,7 +89,6 @@ def add_user(samdb: SamDB, user: User):
     samdb.transaction_start()
     try:
         password = secrets.token_urlsafe(pw_length) + "!"
-        # username_cn = f'CN={user.username},CN=Users,DC=grit,DC=ucsb,DC=edu'
         samdb.newuser(
             username=user.username,
             password=password,
@@ -101,6 +103,17 @@ def add_user(samdb: SamDB, user: User):
             description=user.description,
         )
 
+        # Add properties that are not supported with the newuser command
+        extra_props = f"""dn: CN={user.username},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu
+changetype: modify
+add: mail
+mail: {user.email}
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/{user.username}
+"""
+        samdb.modify_ldif(extra_props)
+        
         samdb.add_remove_group_members(
             groupname=user.userprimarygroup,
             members=[user.username],
@@ -116,10 +129,7 @@ def add_user(samdb: SamDB, user: User):
 
         usergroups = user.afsusergroup
         for i in usergroups:
-            print(i)
             x = i.replace("auto.", "")
-            print(x)
-            print("--------")
 
             add_userafs = afs_ldif(
                 f"/home/{user.username}",
@@ -150,7 +160,7 @@ def add_user(samdb: SamDB, user: User):
 
         add_autofs_mount(user, newuid, gid)
 
-    except Exception as e:
+    except:
         samdb.transaction_cancel()
         raise
     else:

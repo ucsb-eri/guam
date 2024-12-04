@@ -99,8 +99,7 @@ async def search_view(
 def user_get():
     # c.ModelForm.model_rebuild()
     form = c.ModelForm(model=User, submit_url="/api/users")
-    # return layout(form, title="Add New User")
-    return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
+    return layout([form], title="Add New User")
 
 
 @router.post("/api/users", response_model=FastUI, response_model_exclude_none=True)
@@ -113,13 +112,13 @@ def user_post(
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
-    return user_created(user)
+    return layout([c.Heading(text=f"User Added"), c.Details(data=user)], title="User Added")
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
 async def get_afsmounts():
     return layout(
-        c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts"),
+        [c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts")],
         title="Add New Mount to AutoFS",
     )
 
@@ -139,7 +138,7 @@ async def post_afsmounts(
 @router.get("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
 async def get_afsgroups():
     return layout(
-        c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups"),
+        [c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups")],
         title="Add New AutoFS Group",
     )
 
@@ -160,7 +159,7 @@ async def post_afsgroups(
 @router.get("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
 async def get_secgroups():
     return layout(
-        c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups"),
+        [c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups")],
         title="Create New Security Group",
     )
 
