@@ -3,7 +3,7 @@ departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENMT', '
 [server]
 url = "ldap://dc2.grit.ucsb.edu"
 username = "$LDB_USER"
-password = "$LDB_PASSWORD"
+password = "$LDB_PASS"
 
 [afsserver]
 "autofs-home.eri.ucsb.edu"= ["/raid/users-eri/", "/raid/staff-eri/", "/raid/services-eri/", "/raid/users-nrs/", "/raid/users-msi/", "/raid/staff-msi/", "/raid/services-msi/"]

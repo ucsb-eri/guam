@@ -1,3 +1,5 @@
+import logging
+import traceback
 from typing import Annotated
 
 import starlette.status as status
@@ -5,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastui import AnyComponent, FastUI, prebuilt_html
 from fastui import components as c
-from fastui.events import GoToEvent
 from fastui.forms import SelectSearchResponse, fastui_form
 from ldb import LdbError
 from samba.samdb import SamDB
@@ -16,7 +17,13 @@ from app.models.secgroup import SecurityGroup
 from app.models.user import User
 from app.utils import autofs, groups, users
 
+from app.components import layout
+
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
+
+# Needed to prevent this problem: https://errors.pydantic.dev/2.10/u/class-not-fully-defined
+c.ModelForm.model_rebuild()
 
 
 def get_smb():
@@ -25,39 +32,6 @@ def get_smb():
         yield samdb
     finally:
         samdb.disconnect()
-
-
-def layout(*components: AnyComponent, title: str) -> list[AnyComponent]:
-    return [
-        c.PageTitle(text=title),
-        c.Navbar(
-            title="GUAM",
-            title_event=GoToEvent(url="/users"),
-            start_links=[
-                c.Link(
-                    components=[c.Text(text="User")],
-                    on_click=GoToEvent(url="/users"),
-                    active="startswith:/users",
-                ),
-                c.Link(
-                    components=[c.Text(text="AFS Mount")],
-                    on_click=GoToEvent(url="/afsmounts"),
-                    active="startswith:/afsmounts",
-                ),
-                c.Link(
-                    components=[c.Text(text="AFS Group")],
-                    on_click=GoToEvent(url="/afsgroups"),
-                    active="startswith:/afsgroups",
-                ),
-                c.Link(
-                    components=[c.Text(text="Security Group")],
-                    on_click=GoToEvent(url="/secgroups"),
-                    active="startswith:/secgroups",
-                ),
-            ],
-        ),
-        c.Page(components=components),
-    ]
 
 
 @router.get("/api/forms/servers", response_model=SelectSearchResponse)
@@ -81,7 +55,8 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [department for department in departments if department.startswith(q)]
+    departments = [
+        department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
@@ -102,7 +77,6 @@ async def search_view(
     for afsgroup in afsgroups:
         options.append({"value": afsgroup, "label": afsgroup})
 
-    print(options)
     return SelectSearchResponse(options=options)
 
 
@@ -124,89 +98,110 @@ async def search_view(
 
 @router.get("/api/users", response_model=FastUI, response_model_exclude_none=True)
 def user_get():
-    return layout(
-        c.ModelForm(model=User, submit_url="/api/users"), title="Add New User"
-    )
-    # return [c.Page(components=[c.ModelForm(model=User, submit_url="/api/users")])] # , title="Add New User"),
+    # c.ModelForm.model_rebuild()
+    form = c.ModelForm(model=User, submit_url="/api/users")
+    return layout([form], title="Add New User")
 
 
-@router.post("/api/users", response_model=FastUI)
+@router.post("/api/users", response_model=FastUI, response_model_exclude_none=True)
 def user_post(
     form: Annotated[User, fastui_form(User)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
         user = users.add_user(samdb, form)
-    except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    return [form]
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+    return layout(
+        [c.Heading(text="User Added"), c.Details(data=user)], title="User Added"
+    )
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
-async def get_afsmounts():
+async def afsmounts_get():
     return layout(
-        c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts"),
+        [c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts")],
         title="Add New Mount to AutoFS",
     )
 
 
-@router.post("/api/afsmounts", response_model=FastUI)
-async def post_afsmounts(
+@router.post("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
+def afsmounts_post(
     form: Annotated[AutoFSMount, fastui_form(AutoFSMount)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
         mount = autofs.addAutofsEntry(samdb, form)
-    except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    return [form]
+        print(mount)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return layout(
+        [c.Heading(text="AutoFS Mount Added"), c.Details(data=mount)],
+        title="AutoFS Mount Added",
+    )
 
 
 @router.get("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
-async def get_afsgroups():
+async def afsgroups_get():
     return layout(
-        c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups"),
+        [c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups")],
         title="Add New AutoFS Group",
     )
 
 
-@router.post("/api/afsgroups")
-async def post_afsgroups(
+@router.post("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
+def afsgroups_post(
     form: Annotated[AutoFSGroup, fastui_form(AutoFSGroup)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
-        groups = autofs.addAutofsGroup(data)
-    except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        groups = autofs.addAutofsGroup(samdb, form)
+        markdown = ""
+        for group in groups:
+            markdown += f"- {group}\n"
 
-    return [form]
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return layout(
+        [c.Heading(text="AutoFS Groups Added"), c.Markdown(text=markdown)],
+        title="AutoFS Groups Added",
+    )
 
 
 @router.get("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
-async def get_secgroups():
+async def secgroups_get():
     return layout(
-        c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups"),
+        [c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups")],
         title="Create New Security Group",
     )
 
 
-@router.post("/api/secgroups", response_model=FastUI)
-async def post_secgroups(
+@router.post("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
+def secgroups_post(
     form: Annotated[SecurityGroup, fastui_form(SecurityGroup)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
-        group = groups.add_sec_group(data)
-    except LdbError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    return [form]
+        group = groups.add_sec_group(samdb, form)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+    return layout(
+        [c.Heading(text="Security Group Added"), c.Details(data=group)],
+        title="Security Group Added",
+    )
 
 
 @router.get("/")
 async def index():
     # Redirect to /docs (relative URL)
     return RedirectResponse(url="/users", status_code=status.HTTP_302_FOUND)
+
 
 # IMPORTANT: This route should be the last route in this file!!!!!!!
 @router.get("/{path:path}")

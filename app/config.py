@@ -1,32 +1,42 @@
-import tomllib
-from pathlib import Path
-from dotenv import dotenv_values
+import os
 import re
+import sys
+from pathlib import Path
+
+import tomllib
+from samba.auth import system_session
+from samba.credentials import Credentials
+from samba.param import LoadParm
+from samba.samdb import SamDB
+from xdg_base_dirs import xdg_config_home
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 
 def read_config():
-    # Load .env file
-    env_vars = dotenv_values(".env")
+    # config = {"USER": "foo", "EMAIL": "foo@example.org"}
+    system_config = os.path.join("/", "etc", "guam2", "config.toml")
+    user_config = os.path.join(xdg_config_home(), "guam2", "config.toml")
+    config_path = user_config if os.path.exists(user_config) else system_config
 
-    path = Path("config.toml")
+    try:
+        f = open(config_path, "rb")
+        config = tomllib.load(f)
 
-    if not path.is_file():
-        raise Exception(
-            f"No configuration file found! Add your configuration to {
-                str(path.absolute())}"
+        return config
+    except FileNotFoundError:
+        print(
+            f"No configuration found!\n\nFor system config, create: {
+                system_config}\nFor user config, create: {user_config}"
         )
-    config_str = ""
-    with open(path, "r") as f:
-        for line in f:
-            # Replace environment variables in the line
-            for key in env_vars.keys():
-                line = re.sub("\\$\\{?" + key + "\\}?", env_vars[key], line)
+        exit(1)
+    except tomllib.TOMLDecodeError:
+        print(f"Config is  invalid. Edit: {config_path}")
+        exit(1)
 
-            config_str += line
-
-    config = tomllib.loads(config_str)
-
-    return config
 
 config = read_config()
 
