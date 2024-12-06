@@ -85,7 +85,7 @@ objectCategory: CN=NisMap,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: auto.{each}
 distinguishedName: CN=auto.{each},OU={each},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
 
-            # samdb.add_ldif(afsnewgroup)
+            samdb.add_ldif(afsnewgroup)
 
     except Exception as e:
         samdb.transaction_cancel()

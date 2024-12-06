@@ -114,44 +114,46 @@ def user_post(
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
     return layout(
-        [c.Heading(text=f"User Added"), c.Details(data=user)], title="User Added"
+        [c.Heading(text="User Added"), c.Details(data=user)], title="User Added"
     )
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
-async def get_afsmounts():
+async def afsmounts_get():
     return layout(
         [c.ModelForm(model=AutoFSMount, submit_url="/api/afsmounts")],
         title="Add New Mount to AutoFS",
     )
 
 
-@router.post("/api/afsmounts", response_model=FastUI)
-async def post_afsmounts(
+@router.post("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
+def afsmounts_post(
     form: Annotated[AutoFSMount, fastui_form(AutoFSMount)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
         mount = autofs.addAutofsEntry(samdb, form)
+        print(mount)
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
+
     return layout(
-        [c.Heading(text=f"AutoFS Mount Added"), c.Details(data=mount)],
+        [c.Heading(text="AutoFS Mount Added"), c.Details(data=mount)],
         title="AutoFS Mount Added",
     )
 
 
 @router.get("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
-async def get_afsgroups():
+async def afsgroups_get():
     return layout(
         [c.ModelForm(model=AutoFSGroup, submit_url="/api/afsgroups")],
         title="Add New AutoFS Group",
     )
 
 
-@router.post("/api/afsgroups")
-async def post_afsgroups(
+@router.post("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
+def afsgroups_post(
     form: Annotated[AutoFSGroup, fastui_form(AutoFSGroup)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
@@ -166,32 +168,34 @@ async def post_afsgroups(
         raise HTTPException(status_code=400, detail=str(e))
 
     return layout(
-        [c.Heading(text=f"AutoFS Groups Added"), c.Markdown(text=markdown)],
+        [c.Heading(text="AutoFS Groups Added"), c.Markdown(text=markdown)],
         title="AutoFS Groups Added",
     )
 
 
 @router.get("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
-async def get_secgroups():
+async def secgroups_get():
     return layout(
         [c.ModelForm(model=SecurityGroup, submit_url="/api/secgroups")],
         title="Create New Security Group",
     )
 
 
-@router.post("/api/secgroups", response_model=FastUI)
-async def post_secgroups(
+@router.post("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
+def secgroups_post(
     form: Annotated[SecurityGroup, fastui_form(SecurityGroup)],
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
-        group = groups.add_sec_group(samdb,form)
+        group = groups.add_sec_group(samdb, form)
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
     return layout(
-        [c.Heading(text=f"Security Group Added"), c.Details(data=group)], title="Security Group Added"
+        [c.Heading(text="Security Group Added"), c.Details(data=group)],
+        title="Security Group Added",
     )
+
 
 @router.get("/")
 async def index():
