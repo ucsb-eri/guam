@@ -24,6 +24,7 @@ def add_sec_group(samdb: SamDB, group: SecurityGroup):
     max_gid = get_max_gid(samdb)
     new_gid = max_gid + 1
 
+    samdb.transaction_start()
     try:
         addsecgroup = f"""dn: CN={group.groupname},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu
 objectClass: top
@@ -48,7 +49,7 @@ distinguishedName: CN={group.groupname},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu"""
     return group
 
 
-def secgroups(samdb: SamDB, filter: str):
+def secgroups(samdb: SamDB, filter: str=""):
     search_result = samdb.search(
         "OU=GRIT Users,DC=grit,DC=ucsb,DC=edu", expression="(sAMAccountType=268435456)"
     )

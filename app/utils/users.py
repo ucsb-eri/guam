@@ -60,7 +60,7 @@ sudo systemctl restart nfs-server
     stderr_str = stderr.read().decode("ascii")
     
     if len(stderr_str) > 0:
-        raise NFSError(stderr.read().decode("ascii"))
+        raise NFSError(stderr_str)
 
 
 def afs_ldif(afs_mount, afs_group, afs_server, username, ou):
@@ -111,6 +111,7 @@ mail: {user.email}
 -
 add: unixHomeDirectory
 unixHomeDirectory: /home/{user.username}
+
 """
         samdb.modify_ldif(extra_props)
         
