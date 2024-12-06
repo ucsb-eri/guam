@@ -1,23 +1,9 @@
-import os
 import re
 
 from samba.samdb import SamDB
+from .smb_helpers import get_max_gid
 
-from app.models.secgroup import SecurityGroup
-
-# def max_gid():
-
-
-def get_max_gid(samdb: SamDB):
-    result = samdb.search("DC=grit,DC=ucsb,DC=edu",
-                          expression="(gidNumber=48***)")
-    max_gid = 0
-    for item in result:
-        gid = int(str(item.get("gidNumber", 0)))
-        if gid > max_gid:
-            max_gid = gid
-
-    return max_gid
+from guam.models.secgroup import SecurityGroup
 
 
 def add_sec_group(samdb: SamDB, group: SecurityGroup):
@@ -49,7 +35,7 @@ distinguishedName: CN={group.groupname},OU=GRIT Users,DC=grit,DC=ucsb,DC=edu"""
     return group
 
 
-def secgroups(samdb: SamDB, filter: str=""):
+def secgroups(samdb: SamDB, filter: str = ""):
     search_result = samdb.search(
         "OU=GRIT Users,DC=grit,DC=ucsb,DC=edu", expression="(sAMAccountType=268435456)"
     )

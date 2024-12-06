@@ -1,13 +1,7 @@
 import os
-import re
 import sys
-from pathlib import Path
 
 import tomllib
-from samba.auth import system_session
-from samba.credentials import Credentials
-from samba.param import LoadParm
-from samba.samdb import SamDB
 from xdg_base_dirs import xdg_config_home
 
 if sys.version_info >= (3, 11):

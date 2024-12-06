@@ -3,7 +3,7 @@ from samba.credentials import Credentials
 from samba.param import LoadParm
 from samba.samdb import SamDB
 
-from app.config import config
+from guam.config import config
 
 
 def connect():

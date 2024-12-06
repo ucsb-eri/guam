@@ -1,8 +1,0 @@
-fastapi
-fastui
-paramiko
-python-dotenv
-python-multipart
-tomli
-uvicorn
-xdg-base-dirs

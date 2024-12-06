@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "guam"
+description = "GUAM"
+authors = [
+	{ name = "Mike Bales", email = "mbales@ucsb.edu" },
+	{ name = "Tjaart van der Walt", email = "tjaart@ucsb.edu" },
+]
+dynamic = ["version"]
+dependencies = [
+	"fastapi",
+	"fastui",
+	"paramiko",
+	"python-dotenv",
+	"python-multipart",
+	"tomli",
+	"uvicorn",
+	"xdg-base-dirs",
+]
+
+[project.scripts]
+guam = "guam:main"

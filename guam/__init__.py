@@ -1,11 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app import router
+from guam import router
 
-app = FastAPI()
 
-app.include_router(router.router)
+def main():
+    app = FastAPI()
 
-if __name__ == "__main__":
+    app.include_router(router.router)
+
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="debug")
