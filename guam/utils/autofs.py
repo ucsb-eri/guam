@@ -1,10 +1,6 @@
-import os
-import re
-import subprocess
-
 from samba.samdb import SamDB
 
-from app.models.autofs import AutoFSGroup, AutoFSMount
+from guam.models.autofs import AutoFSGroup, AutoFSMount
 
 
 def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
@@ -23,7 +19,7 @@ objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: {afs}
 nisMapEntry: -nolock,rw,soft,vers=4 {mount.autofspath}
 distinguishedName: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
-            
+
             samdb.add_ldif(addafsgroup)
 
     except Exception as e:

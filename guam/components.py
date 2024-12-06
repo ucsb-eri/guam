@@ -2,7 +2,8 @@ from fastui import AnyComponent
 from fastui import components as c
 from fastui.events import GoToEvent
 
-from app.models.user import User
+from guam.models.user import User
+
 
 def layout(components: list[AnyComponent], title: str) -> list[AnyComponent]:
     return [

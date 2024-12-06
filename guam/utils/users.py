@@ -1,14 +1,13 @@
 import logging
-import os
 import re
 import secrets
-import subprocess
 
 from paramiko.client import SSHClient
 from samba.samdb import SamDB
+from .smb_helpers import get_max_uid
 
-from app.models.user import User
-from app.utils import groups
+from guam.models.user import User
+from guam.utils import groups
 
 logger = logging.getLogger("uvicorn.error")
 pw_length = 10
@@ -17,21 +16,6 @@ uidstrip = re.compile(r"^uidNumber: ", re.MULTILINE)
 
 class NFSError(Exception):
     pass
-
-
-def get_max_uid(samdb: SamDB):
-    result = {}
-
-    result = samdb.search("DC=grit,DC=ucsb,DC=edu",
-                          expression="(uidNumber=5****)")
-
-    max_uid = 0
-    for item in result:
-        uid = int(str(item.get("uidNumber", 0)))
-        if uid > max_uid:
-            max_uid = uid
-
-    return max_uid
 
 
 def add_autofs_mount(user, uid, gid):
@@ -58,7 +42,7 @@ sudo systemctl restart nfs-server
 
     stdout_str = stdout.read().decode("ascii")
     stderr_str = stderr.read().decode("ascii")
-    
+
     if len(stderr_str) > 0:
         raise NFSError(stderr_str)
 
@@ -114,7 +98,7 @@ unixHomeDirectory: /home/{user.username}
 
 """
         samdb.modify_ldif(extra_props)
-        
+
         samdb.add_remove_group_members(
             groupname=user.userprimarygroup,
             members=[user.username],

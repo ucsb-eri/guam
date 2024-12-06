@@ -22,5 +22,6 @@ class AutoFSMount(BaseModel):
 
 
 class AutoFSGroup(BaseModel):
-    groups: Annotated[str | None, Textarea(
-        rows=5)] = Field(title="AutoFS Groups", placeholder="Group names, one per line")
+    groups: Annotated[str | None, Textarea(rows=5)] = Field(
+        title="AutoFS Groups", placeholder="Group names, one per line"
+    )

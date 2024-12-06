@@ -8,16 +8,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastui import AnyComponent, FastUI, prebuilt_html
 from fastui import components as c
 from fastui.forms import SelectSearchResponse, fastui_form
-from ldb import LdbError
 from samba.samdb import SamDB
 
-from app import config, smb
-from app.models.autofs import AutoFSGroup, AutoFSMount
-from app.models.secgroup import SecurityGroup
-from app.models.user import User
-from app.utils import autofs, groups, users
-
-from app.components import layout
+from guam import config, smb
+from guam.components import layout
+from guam.models.autofs import AutoFSGroup, AutoFSMount
+from guam.models.secgroup import SecurityGroup
+from guam.models.user import User
+from guam.utils import autofs, groups, users
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
