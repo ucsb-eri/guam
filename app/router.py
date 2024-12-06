@@ -25,6 +25,7 @@ logger = logging.getLogger("uvicorn.error")
 # Needed to prevent this problem: https://errors.pydantic.dev/2.10/u/class-not-fully-defined
 c.ModelForm.model_rebuild()
 
+
 def get_smb():
     samdb = smb.connect()
     try:
@@ -54,7 +55,8 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [department for department in departments if department.startswith(q)]
+    departments = [
+        department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
@@ -75,7 +77,6 @@ async def search_view(
     for afsgroup in afsgroups:
         options.append({"value": afsgroup, "label": afsgroup})
 
-    print(options)
     return SelectSearchResponse(options=options)
 
 
@@ -112,7 +113,9 @@ def user_post(
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
-    return layout([c.Heading(text=f"User Added"), c.Details(data=user)], title="User Added")
+    return layout(
+        [c.Heading(text=f"User Added"), c.Details(data=user)], title="User Added"
+    )
 
 
 @router.get("/api/afsmounts", response_model=FastUI, response_model_exclude_none=True)
@@ -130,9 +133,13 @@ async def post_afsmounts(
 ) -> list[AnyComponent]:
     try:
         mount = autofs.addAutofsEntry(samdb, form)
-    except LdbError as e:
+    except Exception as e:
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
-    return [form]
+    return layout(
+        [c.Heading(text=f"AutoFS Mount Added"), c.Details(data=mount)],
+        title="AutoFS Mount Added",
+    )
 
 
 @router.get("/api/afsgroups", response_model=FastUI, response_model_exclude_none=True)
@@ -149,11 +156,19 @@ async def post_afsgroups(
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
-        groups = autofs.addAutofsGroup(data)
-    except LdbError as e:
+        groups = autofs.addAutofsGroup(samdb, form)
+        markdown = ""
+        for group in groups:
+            markdown += f"- {group}\n"
+
+    except Exception as e:
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
 
-    return [form]
+    return layout(
+        [c.Heading(text=f"AutoFS Groups Added"), c.Markdown(text=markdown)],
+        title="AutoFS Groups Added",
+    )
 
 
 @router.get("/api/secgroups", response_model=FastUI, response_model_exclude_none=True)
@@ -170,11 +185,13 @@ async def post_secgroups(
     samdb: Annotated[SamDB, Depends(get_smb)],
 ) -> list[AnyComponent]:
     try:
-        group = groups.add_sec_group(data)
-    except LdbError as e:
+        group = groups.add_sec_group(samdb,form)
+    except Exception as e:
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=400, detail=str(e))
-    return [form]
-
+    return layout(
+        [c.Heading(text=f"Security Group Added"), c.Details(data=group)], title="Security Group Added"
+    )
 
 @router.get("/")
 async def index():
