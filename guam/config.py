@@ -12,8 +12,8 @@ else:
 
 def read_config():
     # config = {"USER": "foo", "EMAIL": "foo@example.org"}
-    system_config = os.path.join("/", "etc", "guam2", "config.toml")
-    user_config = os.path.join(xdg_config_home(), "guam2", "config.toml")
+    system_config = os.path.join("/", "etc", "guam", "config.toml")
+    user_config = os.path.join(xdg_config_home(), "guam", "config.toml")
     config_path = user_config if os.path.exists(user_config) else system_config
 
     try:
