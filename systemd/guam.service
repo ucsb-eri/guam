@@ -1,0 +1,12 @@
+[Unit]
+Description=guam
+After=network.target
+
+[Service]
+User=gritadm
+WorkingDirectory=/home/gritadm/guam
+ExecStart=/usr/local/bin/guam
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
