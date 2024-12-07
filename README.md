@@ -6,7 +6,7 @@ GUAM is a front end for samba-tool to aid in AD account creation, as well as man
 
 Guam searches for a configuration file `config.toml` in the following locations:
 
-- `$XDG_CONFIG_HOME`, which defaults to: `/$HOME/.config/config.toml`
+- `$XDG_CONFIG_HOME`, which defaults to: `/$HOME/.config/guam/config.toml`
 - `/etc/guam/config.toml`
 
 ## Dependencies

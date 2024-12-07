@@ -1,13 +1,15 @@
+import logging
 import os
 import sys
 
-import tomllib
 from xdg_base_dirs import xdg_config_home
 
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     import tomli as tomllib
+
+logger = logging.getLogger("uvicorn.error")
 
 
 def read_config():
@@ -22,13 +24,16 @@ def read_config():
 
         return config
     except FileNotFoundError:
-        print(
-            f"No configuration found!\n\nFor system config, create: {
-                system_config}\nFor user config, create: {user_config}"
+        logger.error(
+            f"""No configuration found!
+
+For system config, create: {system_config}
+For user config, create: {user_config}
+"""
         )
         exit(1)
     except tomllib.TOMLDecodeError:
-        print(f"Config is  invalid. Edit: {config_path}")
+        logger.error(f"Config is  invalid. Edit: {config_path}")
         exit(1)
 
 
