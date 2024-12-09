@@ -1,9 +1,15 @@
 departmentlist = ['Affiliate', 'BREN', 'CBER', 'CHNE', 'DESN', 'EEMB', 'ENMT', 'ENST', 'ERTH', 'ESMS', 'GEOG', 'GEOL', 'ISBR', 'LIBR', 'MATH', 'MATP', 'MSII', 'NCEA', 'NEXS', 'NRSS', 'PHYS', 'RESD', 'SAPP', 'STSP', 'NULL']
 
 [server]
+host = "0.0.0.0"
+port = 8000
+log_level = "debug"
+
+
+[ldap]
 url = "ldap://dc2.grit.ucsb.edu"
-username = "$LDB_USER"
-password = "$LDB_PASS"
+username = "MY_LDAP_USER"
+password = "MY_LDAP_PASS"
 
 [afsserver]
 "autofs-home.eri.ucsb.edu"= ["/raid/users-eri/", "/raid/staff-eri/", "/raid/services-eri/", "/raid/users-nrs/", "/raid/users-msi/", "/raid/staff-msi/", "/raid/services-msi/"]

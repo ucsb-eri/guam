@@ -7,7 +7,7 @@ from guam.config import config
 
 
 def connect():
-    server_config = config.get("server", {})
+    server_config = config.get("ldap", {})
 
     lp = LoadParm()
     creds = Credentials()
