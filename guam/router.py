@@ -29,7 +29,9 @@ def get_smb():
     try:
         yield samdb
     finally:
-        samdb.disconnect()
+        # TODO: The version of samdb currently running in production does not have disconnect()
+        # samdb.disconnect()
+        samdb = None
 
 
 @router.get("/api/forms/servers", response_model=SelectSearchResponse)
