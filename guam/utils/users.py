@@ -2,7 +2,7 @@ import logging
 import re
 import secrets
 
-from paramiko.client import SSHClient
+from paramiko.client import SSHClient, WarningPolicy
 from samba.samdb import SamDB
 from .smb_helpers import get_max_uid
 
@@ -37,6 +37,7 @@ sudo systemctl restart nfs-server
 """
     client = SSHClient()
     client.load_system_host_keys()
+    client.set_missing_host_key_policy(WarningPolicy)
     client.connect(autofsserver, username="gritadm")
     stdin, stdout, stderr = client.exec_command(nfscommand)
 
