@@ -85,7 +85,7 @@ def add_user(samdb: SamDB, user: User):
             homedirectory=f"/home/{user.username}",
             loginshell="/bin/bash",
             department=user.department,
-            description=user.description,
+            description=user.description if user.description else None,
         )
 
         # Add properties that are not supported with the newuser command
