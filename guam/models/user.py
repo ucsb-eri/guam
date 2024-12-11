@@ -6,7 +6,7 @@ class User(BaseModel):
     fname: str = Field(title="First Name")
     lname: str = Field(title="Last Name")
     email: str = Field(title="Email")
-    description: str = Field(title="Description")
+    description: str = Field(title="Description", default="")
     department: str = Field(
         title="User Department",
         json_schema_extra={"search_url": "/api/forms/departments"},
@@ -16,7 +16,9 @@ class User(BaseModel):
         json_schema_extra={"search_url": "/api/forms/servers"},
     )
     afsusergroup: list[str] = Field(
-        title="AutoFS Groups", json_schema_extra={"search_url": "/api/forms/afsgroups"}
+        title="AutoFS Groups",
+        json_schema_extra={"search_url": "/api/forms/afsgroups"},
+        default="",
     )
     userprimarygroup: str = Field(
         title="Primary AD Group",
@@ -25,6 +27,7 @@ class User(BaseModel):
     usersecgroup: list[str] = Field(
         title="Additional AD Groups",
         json_schema_extra={"search_url": "/api/forms/secgroups"},
+        default="",
     )
 
     @field_validator("afsusergroup", "usersecgroup", mode="before")
