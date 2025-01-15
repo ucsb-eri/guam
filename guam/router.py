@@ -55,8 +55,7 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [
-        department for department in departments if department.startswith(q)]
+    departments = [department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
