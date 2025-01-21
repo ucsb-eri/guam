@@ -25,13 +25,10 @@ jobs:
           latest: true
           fileName: '*.whl'
       - name: copy release file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.HOST }}
-          username: ${{ vars.USER }}
-          key: ${{ secrets.KEY }}
-          source: ${{ fromJson(steps.download_release.outputs.downloaded_files)[0] }}
-          target: ~/guam/releases/
+        run: |
+          tmpfile=$(mktemp)
+          echo "${{ secrets.KEY }}" > ${tmpfile}
+          scp -i ${tmpfile} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "${{ fromJson(steps.download_release.outputs.downloaded_files)[0] }}" "${{ vars.USER }}@${{ vars.HOST }}:/gritadm/guam/releases/"
       - name: install release
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -40,5 +37,5 @@ jobs:
           key: ${{ secrets.KEY }}
           script: |
             FILENAME="$(basename '${{ fromJson(steps.download_release.outputs.downloaded_files)[0] }}')"
-            sudo pip install --force-reinstall ~/guam/releases/github/workspace/$FILENAME
+            sudo pip install --force-reinstall ~/guam/releases/$FILENAME
       - uses: actions/checkout@v4
