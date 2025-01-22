@@ -38,4 +38,11 @@ jobs:
           script: |
             FILENAME="$(basename '${{ fromJson(steps.download_release.outputs.downloaded_files)[0] }}')"
             sudo pip install --force-reinstall ~/guam/releases/$FILENAME
-      - uses: actions/checkout@v4
+      - name: restart service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.HOST }}
+          username: ${{ vars.USER }}
+          key: ${{ secrets.KEY }}
+          script: |
+            sudo systemctl restart guam.service
