@@ -1,4 +1,5 @@
 import logging
+import re
 import traceback
 from typing import Annotated
 
@@ -12,7 +13,7 @@ from samba.samdb import SamDB
 
 from guam import config, smb
 from guam.components import layout
-from guam.models.autofs import AutoFSGroup, AutoFSMount
+from guam.models.autofs import AutoFSFilesystem, AutoFSGroup, AutoFSMount
 from guam.models.secgroup import SecurityGroup
 from guam.models.user import User
 from guam.utils import autofs, groups, users
@@ -115,6 +116,69 @@ def user_post(
         raise HTTPException(status_code=400, detail=str(e))
     return layout(
         [c.Heading(text="User Added"), c.Details(data=user)], title="User Added"
+    )
+
+
+@router.get(
+    "/api/afsfilesystem", response_model=FastUI, response_model_exclude_none=True
+)
+async def afsfilesystem_get():
+    return layout(
+        [c.ModelForm(model=AutoFSFilesystem, submit_url="/api/afsfilesystem")],
+        title="Add New AutoFS Filesystem",
+    )
+
+
+@router.post(
+    "/api/afsfilesystem", response_model=FastUI, response_model_exclude_none=True
+)
+def afsfilesystem_post(
+    form: Annotated[AutoFSFilesystem, fastui_form(AutoFSFilesystem)],
+    samdb: Annotated[SamDB, Depends(get_smb)],
+) -> list[AnyComponent]:
+    try:
+        results = samdb.search(
+            "DC=grit,DC=ucsb,DC=edu", expression=f"(cn={form.username})"
+        )
+
+        try:
+            item = results[0]
+
+            uid = int(str(item.get("uidNumber", 0)))
+            gid = int(str(item.get("gidNumber", 0)))
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Could not find user: {form.username}"
+            )
+
+        if not form.create_mount:
+            try:
+                results = samdb.search(
+                    "DC=grit,DC=ucsb,DC=edu", expression=f"(cn=/home/{form.username})"
+                )
+                item = results[0]
+
+                map_entry = str(item.get("nisMapEntry", 0))
+                map_entry = re.sub("^.*\\s", "", map_entry)
+                idx = map_entry.rfind('/')
+
+                afsserver = map_entry[:idx + 1]
+            except Exception as e:
+
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Could not find home folder for user: {form.username}",
+                )
+        else:
+            afsserver = form.afsserver
+        
+        autofs.add_autofs_filesystem(form.username, form.afsserver, uid, gid, form.create_mount)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=400, detail=str(e))
+    return layout(
+        [c.Heading(text="Filesystem Added"), c.Details(data=form)],
+        title="Filesystem Added",
     )
 
 

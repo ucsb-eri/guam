@@ -1,6 +1,65 @@
+import re
+
+from paramiko.client import SSHClient, WarningPolicy
 from samba.samdb import SamDB
 
 from guam.models.autofs import AutoFSGroup, AutoFSMount
+
+
+class NFSError(Exception):
+    pass
+
+
+def ssh_remote_command(host, cmd):
+    client = SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(WarningPolicy)
+    client.connect(host, username="gritadm")
+    stdin, stdout, stderr = client.exec_command(cmd)
+
+    stdout_str = stdout.read().decode("ascii")
+    stderr_str = stderr.read().decode("ascii")
+
+    if len(stderr_str) > 0:
+        raise NFSError(stderr_str)
+
+    return stdout_str
+
+
+def create_zfs_mount(hostname, zfspath, afspath, uid, gid):
+    cmd = f"""
+sudo zfs create {zfspath} && \
+sudo zfs set quota=300g refquota=50g {zfspath} && \
+sudo chown {uid}:{gid} {afspath}"""
+
+    ssh_remote_command(hostname, cmd)
+
+
+def create_exports(hostname, afspath):
+    cmd = f"""
+sudo bash -c 'cat <<EOF >> /etc/exports
+{afspath} \
+128.111.100.0/23(rw,no_root_squash) \
+128.111.236.0/24(rw,no_root_squash) \
+128.111.104.0/24(rw,no_root_squash)
+EOF' && \
+sudo systemctl restart nfs-server
+"""
+    ssh_remote_command(hostname, cmd)
+
+
+def add_autofs_filesystem(username, afsserver, uid, gid, create_mount=True):
+    print(afsserver)
+    zfsserverpath = re.sub(".*:\/", "", afsserver)
+    afsserverpath = re.sub("^.*:", "", afsserver)
+    autofsserver = re.sub(":.*$", "", afsserver)
+
+    zfspath = f"{zfsserverpath}{username}"
+    afspath = f"{afsserverpath}{username}"
+
+    if create_mount:
+        create_zfs_mount(autofsserver, zfspath, afspath, uid, gid)
+    create_exports(autofsserver, afspath)
 
 
 def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
@@ -8,7 +67,9 @@ def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
     try:
         for afs in mount.afsgroups:
             y = afs.strip("auto.")
-            addafsgroup = f"""dn: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
+            vers = 3 if y == "SMB" else 4
+
+            addafsgroup = f"""dn: CN={mount.autofsmountpoint},CN={afs},OU={y.replace("-home", "")},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
 objectClass: top
 objectClass: nisObject
 cn: {mount.autofsmountpoint}
@@ -17,8 +78,8 @@ showInAdvancedViewOnly: TRUE
 name: {mount.autofsmountpoint}
 objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: {afs}
-nisMapEntry: -nolock,rw,soft,vers=4 {mount.autofspath}
-distinguishedName: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
+nisMapEntry: -nolock,rw,soft,vers={vers} {mount.autofspath}
+distinguishedName: CN={mount.autofsmountpoint},CN={afs},OU={y.replace("-home", "")},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
 
             samdb.add_ldif(addafsgroup)
 

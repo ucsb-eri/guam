@@ -25,3 +25,19 @@ class AutoFSGroup(BaseModel):
     groups: Annotated[str | None, Textarea(rows=5)] = Field(
         title="AutoFS Groups", placeholder="Group names, one per line"
     )
+
+
+class AutoFSFilesystem(BaseModel):
+    username: str = Field(title="Username")
+    create_mount: bool | None = Field(
+        None,
+        title="Create Mount",
+        description="If this is disabled, the AutoFS Server field below will be ignored",
+        json_schema_extra={"mode": "switch"},
+    )
+
+    afsserver: Annotated[str, None] = Field(
+        title="AutoFS Server",
+        json_schema_extra={"search_url": "/api/forms/servers"},
+        default=None,
+    )

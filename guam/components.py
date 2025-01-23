@@ -2,8 +2,6 @@ from fastui import AnyComponent
 from fastui import components as c
 from fastui.events import GoToEvent
 
-from guam.models.user import User
-
 
 def layout(components: list[AnyComponent], title: str) -> list[AnyComponent]:
     return [
@@ -21,6 +19,11 @@ def layout(components: list[AnyComponent], title: str) -> list[AnyComponent]:
                     components=[c.Text(text="AFS Mount")],
                     on_click=GoToEvent(url="/afsmounts"),
                     active="startswith:/afsmounts",
+                ),
+                c.Link(
+                    components=[c.Text(text="AFS Filesystem")],
+                    on_click=GoToEvent(url="/afsfilesystem"),
+                    active="startswith:/afsfilesystem",
                 ),
                 c.Link(
                     components=[c.Text(text="AFS Group")],
