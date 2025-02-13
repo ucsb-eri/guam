@@ -23,15 +23,10 @@ logger = logging.getLogger("uvicorn.error")
 # Needed to prevent this problem: https://errors.pydantic.dev/2.10/u/class-not-fully-defined
 c.ModelForm.model_rebuild()
 
+samdb = smb.connect()
 
 def get_smb():
-    samdb = smb.connect()
-    try:
-        yield samdb
-    finally:
-        # TODO: The version of samdb currently running in production does not have disconnect()
-        # samdb.disconnect()
-        samdb = None
+    yield samdb
 
 
 @router.get("/api/forms/servers", response_model=SelectSearchResponse)
