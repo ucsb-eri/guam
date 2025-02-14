@@ -26,6 +26,15 @@ c.ModelForm.model_rebuild()
 samdb = smb.connect()
 
 def get_smb():
+    global samdb
+
+    try:
+        samdb.search(
+            "ou=AutoFS,DC=grit,DC=ucsb,DC=edu", expression=f"(nisMapName={filter}*)"
+        )
+    except:
+        samdb = smb.connect()
+
     yield samdb
 
 
