@@ -12,6 +12,7 @@ authors = [
 dynamic = ["version"]
 dependencies = [
 	"fastapi",
+	"fastapi-utils",
 	"fastui",
 	"paramiko",
 	"python-dotenv",

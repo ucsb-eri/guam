@@ -5,6 +5,7 @@ from typing import Annotated
 import starlette.status as status
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi_utils.tasks import repeat_every
 from fastui import AnyComponent, FastUI, prebuilt_html
 from fastui import components as c
 from fastui.forms import SelectSearchResponse, fastui_form
@@ -24,6 +25,15 @@ logger = logging.getLogger("uvicorn.error")
 c.ModelForm.model_rebuild()
 
 samdb = smb.connect()
+
+
+# Reconnect to samba every hour to mitigate connection lags
+@repeat_every(seconds=60 * 60)
+def reconnect():
+    global samdb
+
+    samdb = smb.connect()
+
 
 def get_smb():
     global samdb
@@ -59,7 +69,8 @@ async def search_view(
     q: str,
 ) -> SelectSearchResponse:
     departments: list[str] = config.departmentlist
-    departments = [department for department in departments if department.startswith(q)]
+    departments = [
+        department for department in departments if department.startswith(q)]
     options = []
 
     for department in departments:
