@@ -9,6 +9,7 @@ def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
         for afs in mount.afsgroups:
             y = afs.strip("auto.")
             vers = 3 if y in ["SMB", "SMB-ERI"] else 4
+            opts = "-ro,nosuid,noexec" if y in ["CHC-FTP"] else "-nolock,rw,soft"
 
             addafsgroup = f"""dn: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
 objectClass: top
@@ -19,7 +20,7 @@ showInAdvancedViewOnly: TRUE
 name: {mount.autofsmountpoint}
 objectCategory: CN=NisObject,CN=Schema,CN=Configuration,DC=grit,DC=ucsb,DC=edu
 nisMapName: {afs}
-nisMapEntry: -nolock,rw,soft,vers={vers} {mount.autofspath}
+nisMapEntry: {opts},vers={vers} {mount.autofspath}
 distinguishedName: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu"""
 
             samdb.add_ldif(addafsgroup)
