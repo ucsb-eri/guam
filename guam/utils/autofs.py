@@ -8,7 +8,7 @@ def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
     try:
         for afs in mount.afsgroups:
             y = afs.strip("auto.")
-            vers = 3 if y in ["SMB", "SMB-ERI"] else 4
+            vers = 3 if y in ["SMB", "SMB-ERI", "walker-lab"] else 4
             opts = "-ro,nosuid,noexec" if y in ["CHC-FTP"] else "-nolock,rw,soft"
 
             addafsgroup = f"""dn: CN={mount.autofsmountpoint},CN={afs},OU={y.replace('-home', '')},OU=AutoFS,DC=grit,DC=ucsb,DC=edu
