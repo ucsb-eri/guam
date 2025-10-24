@@ -7,7 +7,7 @@ def addAutofsEntry(samdb: SamDB, mount: AutoFSMount):
     samdb.transaction_start()
     try:
         for afs in mount.afsgroups:
-            y = afs.strip("auto.")
+            y = afs.replace("auto.", "")
             vers = 3 if y in ["SMB", "SMB-ERI", "walker-lab"] else 4
             opts = "-ro,nosuid,noexec" if y in ["CHC-FTP"] else "-nolock,rw,soft"
 
